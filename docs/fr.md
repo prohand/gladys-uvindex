@@ -1,11 +1,33 @@
 # Indice UV
 
-Cette intégration suit l'**indice UV** des lieux de votre choix. Vous ajoutez un
-lieu avec son **code postal**, et un appareil apparaît dans l'onglet
-**Découverte**, prêt à être ajouté à Gladys.
+Cette intégration suit l'**indice UV** des lieux de votre choix. Vous ajoutez vos
+**maisons Gladys en un clic** ou un lieu avec son **code postal**, et un appareil
+apparaît dans l'onglet **Découverte**, prêt à être ajouté à Gladys.
 
 Aucun compte à créer, aucune clé d'API à saisir : les deux sources utilisées sont
 des données ouvertes publiques.
+
+## Ajouter vos maisons Gladys, en un clic
+
+Vous avez déjà dit à Gladys où vous habitez : c'est la carte de **Réglages >
+Maisons**. Le bouton **« Ajouter mes maisons Gladys »** lit ces maisons et crée
+un lieu pour chacune qui n'est pas déjà surveillée — aucun code postal à saisir.
+
+Trois choses à savoir :
+
+- **L'accès est une autorisation.** L'endroit où vous vivez est une donnée
+  personnelle : Gladys ne la partage que si vous l'avez accepté sur l'écran
+  d'installation de l'intégration. Si le bouton répond que l'accès est refusé,
+  supprimez puis réinstallez l'intégration en acceptant la demande affichée.
+- **Une maison sans position sur la carte n'a pas de coordonnées.** Elle est
+  nommée dans la réponse, et il suffit de la placer dans Réglages > Maisons puis
+  de relancer l'action.
+- **Ce n'est pas une synchronisation.** Les maisons sont lues au moment du clic.
+  Le lieu obtenu est un lieu ordinaire, que vous renommez et supprimez comme les
+  autres, et une maison déplacée dans Gladys ensuite ne déplace pas son lieu.
+
+Relancer l'action est sans risque : une maison déjà surveillée est signalée, pas
+ajoutée une deuxième fois.
 
 ## Ajouter un lieu
 

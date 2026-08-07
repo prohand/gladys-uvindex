@@ -46,8 +46,8 @@ keeps the device, its history and its place in rooms and scenes.
 
 ### The location list is the single source of truth
 
-`src/locations.js` owns the data, `src/locationEditor.js` the three actions that
-change it. Consequences worth internalising:
+`src/locations.js` owns the data, `src/locationEditor.js` the four actions that
+change or report it. Consequences worth internalising:
 
 - **`locations` is deliberately absent from `config_schema`.** No static form can
   hold a list built at runtime. It is written through `gladys.setConfig()` — the
@@ -100,6 +100,31 @@ Re-publishing does NOT rename an existing device: the core upserts the params of
 the devices already created, never their name. A language switch therefore
 applies to the devices still to be created, which the manifest description and
 `docs/` both say.
+
+### The Gladys houses are a second way in, and a permission
+
+`src/houses.js` reads `GET /house` on the host API — `{ id, name, selector,
+latitude, longitude }` per house, sorted by name — and `import_houses` turns
+every house not already watched into a location.
+
+- **The SDK does not wrap that endpoint** (0.11.0), so the call is made by hand
+  with `GLADYS_HOST_API_URL` / `GLADYS_INTEGRATION_TOKEN`. Re-check on an SDK
+  bump; a wrapper is the better caller once it exists.
+- **`"location": true` in the manifest is an authorization contract**, shown on
+  the install screen and enforced server-side. Without it the core answers
+  **403**, which is why `HOUSE_ACCESS_DENIED` exists: it is not an outage, and
+  the only fix is re-installing the integration. It is also why `gladys_version`
+  is `>=4.85.0` — the version that opened the endpoint and accepts the field.
+- **`latitude`/`longitude` are `null` for a house never placed on the map.**
+  `Number(null)` is 0, so they go through `toCoordinate`, and such a house is
+  named in the answer rather than watched off the coast of Ghana.
+- **The import is ONE `commit`, or none at all.** A `setConfig` per house would
+  re-publish the Discovery tab as many times; nothing is written when nothing is
+  added.
+- **It is not a sync.** Houses are read at click time; what comes out is an
+  ordinary location. Re-importing is idempotent only through the usual
+  `findLocationAtPoint` duplicate check — a house moved in Gladys therefore
+  becomes a second location, which is the same rule as everywhere else here.
 
 ### The postal code is French; the data is not
 

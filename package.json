@@ -1,6 +1,6 @@
 {
   "name": "gladys-uvindex",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Gladys Assistant external integration exposing the UV index of the locations you choose, from the Copernicus CAMS forecast.",
   "type": "module",

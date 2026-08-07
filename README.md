@@ -96,7 +96,8 @@ claims the WHO named it. See [`src/uv/scale.js`](./src/uv/scale.js).
 ├─ docs/{en,fr}.md                   # user documentation, re-hosted by Gladys
 ├─ gladys-assistant-integration.json # manifest (name, config schema, actions, image)
 ├─ Dockerfile                        # Node 24 Alpine, read-only rootfs ready
-└─ cover.png                         # catalog cover, 800×534 px
+├─ tools/cover.mjs                   # the cover's source: HTML, screenshotted
+└─ cover.png                         # catalog cover, 1200×801 px
 ```
 
 ## Run it locally

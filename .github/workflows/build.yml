@@ -106,6 +106,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          # The arm64 half of the build runs under QEMU emulation, where `npm
+          # ci` takes minutes rather than seconds. Caching the layers in the
+          # Actions cache means a release that only changed the integration code
+          # reuses the dependency layer instead of re-installing it emulated.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Docker build summary
         env:

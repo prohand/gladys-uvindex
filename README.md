@@ -97,7 +97,7 @@ claims the WHO named it. See [`src/uv/scale.js`](./src/uv/scale.js).
 ├─ gladys-assistant-integration.json # manifest (name, config schema, actions, image)
 ├─ Dockerfile                        # Node 24 Alpine, read-only rootfs ready
 ├─ tools/cover.mjs                   # the cover's source: HTML, screenshotted
-└─ cover.png                         # catalog cover, 1200×801 px
+└─ cover.jpg                         # catalog cover, 800×534 px, ≤150 KB
 ```
 
 ## Run it locally

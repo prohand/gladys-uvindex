@@ -1,19 +1,32 @@
 // -----------------------------------------------------------------------------
-// Source of `cover.png`, the catalog cover.
+// Source of `cover.jpg`, the catalog cover.
 //
 // The cover is a binary that nobody can edit meaningfully once it is committed,
 // so what it is MADE OF lives here: a self-contained HTML page, rasterized by a
-// headless browser. Run it, then screenshot the page it writes:
+// headless browser. One command writes both:
 //
-//   node tools/cover.mjs
-//   chromium --headless --disable-gpu --hide-scrollbars \
-//            --window-size=800,534 --force-device-scale-factor=1.5 \
-//            --screenshot=cover.png tools/cover.html
+//   node tools/cover.mjs                 # -> tools/cover.html + cover.jpg
+//   CHROMIUM=/path/to/chrome node tools/cover.mjs
 //
-// The page is laid out in 800x534 CSS pixels — the size the cover has always
-// been — and the device scale factor is what takes it to 1200x801: everything
-// drawn here is vector or gradient, so the layout is written once and rendered
-// at whatever resolution the catalog deserves.
+// THE STORE VALIDATES THE COVER, AND GLADYS NEVER TELLS YOU IT FAILED. The
+// indexer of `GladysAssistant/integration-store` downloads `cover_image` and
+// checks it against one contract (its C.1): JPEG or PNG magic bytes, EXACTLY
+// 800x534 pixels, 150 KB MAXIMUM. A cover that misses any of the three is not
+// an error — the integration is still indexed, with the store's own plain blue
+// `placeholder.png` in its place. The catalog then shows that blue rectangle
+// and nothing anywhere says why. `test/cover.test.js` is what says why here.
+//
+// Hence the two things that look like arbitrary choices below:
+//
+//   - The page is laid out in 800x534 CSS pixels and rendered at a device
+//     scale factor of 1. The contract wants those exact pixels, so there is no
+//     resolution to choose: everything drawn here is vector or gradient, and it
+//     is drawn at the size the catalog displays.
+//   - The output is JPEG. Chromium's `--screenshot` flag only ever writes PNG,
+//     and a PNG of THIS picture — full-bleed gradient, blurred sun, not one
+//     flat area to run-length away — weighs ~270 KB at 800x534, well past the
+//     cap. The same frame as JPEG is ~55 KB with nothing visibly lost, which is
+//     why the browser is driven through the DevTools protocol instead.
 //
 // WHAT THE PICTURE SAYS, and why it says it that way:
 //
@@ -31,10 +44,20 @@
 //     digits read the same in either.
 // -----------------------------------------------------------------------------
 
-import { writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 
+// The store's cover contract (C.1), repeated here because it is what the
+// numbers below mean. `test/cover.test.js` holds the same three values.
 const W = 800;
 const H = 534;
+const MAX_BYTES = 150 * 1024;
+// 95 lands around 55 KB — a third of the cap. There is no reason to spend the
+// headroom on a smaller file when the picture is the shop window.
+const JPEG_QUALITY = 95;
 
 // ------------------------------------------------------------------ the gauge
 const CX = 262;
@@ -227,6 +250,181 @@ const html = `<meta charset="utf-8" />
 </svg>
 `;
 
-const target = new URL('./cover.html', import.meta.url);
-writeFileSync(target, html);
-console.log(`wrote ${target.pathname} — screenshot it at a device scale factor of 1.5`);
+const page = new URL('./cover.html', import.meta.url);
+writeFileSync(page, html);
+console.log(`wrote ${page.pathname}`);
+
+// ----------------------------------------------------------------- rasterize
+// A minimal DevTools protocol client: launch, attach, navigate, capture. Node's
+// own WebSocket and fetch are all it takes, so the tool stays dependency-free —
+// nothing here belongs in the container that ships.
+
+const CHROMIUM_CANDIDATES = [
+  process.env.CHROMIUM,
+  process.env.CHROME_PATH,
+  '/opt/pw-browsers/chromium',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  '/usr/bin/google-chrome',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+].filter(Boolean);
+
+/** Where DevTools is listening, as Chromium writes it into its profile. */
+async function readDevToolsUrl(profileDir) {
+  const portFile = join(profileDir, 'DevToolsActivePort');
+  for (let attempt = 0; attempt < 150; attempt += 1) {
+    try {
+      const [port, path] = readFileSync(portFile, 'utf8').split('\n');
+      if (port && path) {
+        return `ws://127.0.0.1:${port.trim()}${path.trim()}`;
+      }
+    } catch {
+      // The file appears only once the browser is up; keep waiting.
+    }
+    await delay(100);
+  }
+  throw new Error('Chromium never opened its DevTools port');
+}
+
+/** Open a DevTools connection and return `send(method, params, sessionId)`. */
+async function connect(wsUrl) {
+  const socket = new WebSocket(wsUrl);
+  await new Promise((resolve, reject) => {
+    socket.addEventListener('open', resolve, { once: true });
+    socket.addEventListener('error', () => reject(new Error('DevTools refused the connection')), {
+      once: true,
+    });
+  });
+
+  let lastId = 0;
+  const pending = new Map();
+  const listeners = new Set();
+  socket.addEventListener('message', (event) => {
+    const message = JSON.parse(event.data);
+    if (message.id !== undefined) {
+      const settle = pending.get(message.id);
+      pending.delete(message.id);
+      settle(message);
+      return;
+    }
+    listeners.forEach((listener) => listener(message));
+  });
+
+  const send = (method, params = {}, sessionId) =>
+    new Promise((resolve, reject) => {
+      const id = (lastId += 1);
+      pending.set(id, (message) =>
+        message.error
+          ? reject(new Error(`${method}: ${message.error.message}`))
+          : resolve(message.result),
+      );
+      socket.send(JSON.stringify({ id, method, params, sessionId }));
+    });
+
+  /** Resolve on the first event named `method`. */
+  const once = (method) =>
+    new Promise((resolve) => {
+      const listener = (message) => {
+        if (message.method === method) {
+          listeners.delete(listener);
+          resolve(message.params);
+        }
+      };
+      listeners.add(listener);
+    });
+
+  return { send, once, close: () => socket.close() };
+}
+
+async function screenshot() {
+  const profileDir = mkdtempSync(join(tmpdir(), 'gladys-uvindex-cover-'));
+  let browser;
+  let lastError;
+  for (const executable of CHROMIUM_CANDIDATES) {
+    browser = spawn(executable, [
+      '--headless',
+      '--disable-gpu',
+      '--no-sandbox',
+      '--hide-scrollbars',
+      `--user-data-dir=${profileDir}`,
+      '--remote-debugging-port=0',
+      'about:blank',
+    ]);
+    // spawn() reports a missing executable asynchronously, so the next
+    // candidate is only reachable from here.
+    const failed = await Promise.race([
+      new Promise((resolve) => browser.once('error', resolve)),
+      delay(300).then(() => null),
+    ]);
+    if (!failed) {
+      break;
+    }
+    lastError = failed;
+    browser = undefined;
+  }
+  if (!browser) {
+    rmSync(profileDir, { recursive: true, force: true });
+    throw new Error(
+      `No Chromium found (tried ${CHROMIUM_CANDIDATES.join(', ')}). Set CHROMIUM to one. ${lastError?.message ?? ''}`,
+    );
+  }
+  // Chromium is chatty on stderr about D-Bus and GPU; none of it is ours.
+  browser.stderr.resume();
+
+  let devtools;
+  try {
+    devtools = await connect(await readDevToolsUrl(profileDir));
+    const { targetId } = await devtools.send('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await devtools.send('Target.attachToTarget', { targetId, flatten: true });
+
+    await devtools.send('Page.enable', {}, sessionId);
+    // The viewport IS the cover: one CSS pixel, one image pixel.
+    await devtools.send(
+      'Emulation.setDeviceMetricsOverride',
+      { width: W, height: H, deviceScaleFactor: 1, mobile: false },
+      sessionId,
+    );
+    const loaded = devtools.once('Page.loadEventFired');
+    await devtools.send('Page.navigate', { url: page.href }, sessionId);
+    await loaded;
+    // The blurs and the masked ray gradient are composited a frame or two after
+    // load; capturing on the load event alone catches the sun half-drawn.
+    await delay(500);
+
+    const { data } = await devtools.send(
+      'Page.captureScreenshot',
+      {
+        format: 'jpeg',
+        quality: JPEG_QUALITY,
+        clip: { x: 0, y: 0, width: W, height: H, scale: 1 },
+      },
+      sessionId,
+    );
+    return Buffer.from(data, 'base64');
+  } finally {
+    // A signal only reaches the process we spawned, and Chromium's renderers
+    // outlive it writing to the profile — which is what makes removing the
+    // directory fail. `Browser.close` is what takes the whole tree down.
+    const exited = new Promise((resolve) => browser.once('exit', resolve));
+    try {
+      await devtools?.send('Browser.close');
+    } catch {
+      browser.kill();
+    }
+    devtools?.close();
+    await Promise.race([exited, delay(10_000)]);
+    rmSync(profileDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  }
+}
+
+const cover = await screenshot();
+// Fail here rather than let a rejected cover reach the store, where the only
+// symptom is a blue rectangle in the catalog.
+if (cover.length > MAX_BYTES) {
+  throw new Error(
+    `cover is ${Math.ceil(cover.length / 1024)} KB, the store accepts ${MAX_BYTES / 1024} KB`,
+  );
+}
+const coverPath = new URL('../cover.jpg', import.meta.url);
+writeFileSync(coverPath, cover);
+console.log(`wrote ${coverPath.pathname} — ${W}x${H}, ${Math.ceil(cover.length / 1024)} KB`);

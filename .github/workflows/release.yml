@@ -47,6 +47,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
+
+      # The same three gates as CI, BEFORE anything is tagged or published.
+      # CI runs on every push to main, but this workflow is started by hand from
+      # the UI and can be pointed at any branch: without this, a red tree can be
+      # bumped, tagged and pushed to ghcr.io as a release, and a tag is the one
+      # thing that cannot be taken back cleanly.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
 
       - name: Bump version and update the manifest
         id: bump

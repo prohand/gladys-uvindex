@@ -1,10 +1,31 @@
 # UV index
 
-This integration follows the **UV index** of the locations you choose. You add a
-location by its **French postal code**, and a device shows up in the
-**Discovery** tab, ready to be added to Gladys.
+This integration follows the **UV index** of the locations you choose. You add
+your **Gladys houses in one click**, or a location by its **French postal code**,
+and a device shows up in the **Discovery** tab, ready to be added to Gladys.
 
 No account to create, no API key to paste: both sources are public open data.
+
+## Adding your Gladys houses, in one click
+
+You have already told Gladys where you live: that is the map in **Settings >
+Houses**. The **"Add my Gladys houses"** button reads those houses and creates a
+location for each one that is not watched yet — no postal code to type.
+
+Three things to know:
+
+- **The access is a permission.** Where you live is personal data: Gladys only
+  shares it if you accepted the request on the integration's install screen. If
+  the button answers that the access is refused, remove and re-install the
+  integration, accepting the request it shows.
+- **A house you never placed on the map has no coordinates.** It is named in the
+  answer; locate it in Settings > Houses and run the action again.
+- **This is not a sync.** The houses are read at the moment you click. What comes
+  out is an ordinary location, renamed and removed like the others, and a house
+  moved in Gladys afterwards does not move its location.
+
+Clicking again is safe: a house that is already watched is reported, not added a
+second time.
 
 ## Adding a location
 

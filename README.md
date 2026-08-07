@@ -9,10 +9,16 @@ and the [`@gladysassistant/integration-sdk`](https://github.com/GladysAssistant/
 
 ## What it does
 
-Add a location from the Configuration screen — type its postal code — and a UV
-device appears in the **Discovery** tab, ready to be added to Gladys. Add as
-many as you like, remove the ones you no longer want, and each one gets its own
-device.
+Add a location from the Configuration screen — one click on **"Add my Gladys
+houses"**, or type a postal code — and a UV device appears in the **Discovery**
+tab, ready to be added to Gladys. Add as many as you like, remove the ones you no
+longer want, and each one gets its own device.
+
+The one-click button reads the houses the user already placed on the map in
+Gladys (`GET /house`, opened by Gladys 4.85.0). That is a permission, not just an
+endpoint: the manifest declares `"location": true`, the install screen shows the
+request, and the core answers 403 to an integration that did not ask. It is also
+why `gladys_version` is `>=4.85.0`.
 
 Every device carries six features:
 
@@ -81,9 +87,10 @@ claims the WHO named it. See [`src/uv/scale.js`](./src/uv/scale.js).
 ├─ src/
 │  ├─ config.js                      # config defaults + normalization
 │  ├─ communes.js                    # postal code -> commune (geo.api.gouv.fr)
+│  ├─ houses.js                      # the user's Gladys houses (GET /house)
 │  ├─ coordinates.js                 # reading/writing a WGS-84 coordinate
 │  ├─ locations.js                   # the user's location list (the source of truth)
-│  ├─ locationEditor.js              # the three buttons that add/list/remove them
+│  ├─ locationEditor.js              # the four buttons that add/import/list/remove them
 │  ├─ language.js                    # the language the DEVICE NAMES are written in
 │  ├─ richText.js                    # the only emphasis the config screen renders
 │  ├─ uv/

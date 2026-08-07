@@ -135,6 +135,27 @@ Config/action field types: `string` (not `text`), `number`, `boolean`, `select`,
 Do not hand-edit `version` or `docker_image` in the manifest — the release
 workflow rewrites both.
 
+### The cover is validated by the store, and failing is silent
+
+`cover_image` is not shown as it is found. The indexer of
+`GladysAssistant/integration-store` downloads it and checks one contract (its
+C.1): **JPEG or PNG magic bytes, exactly 800×534, 150 KB maximum**. Missing any
+of the three does **not** reject the integration and does not surface anywhere
+the author will look — the entry is indexed with the store's own plain blue
+`placeholder.png`, and `cover_url` (which the front prefers over
+`manifest.cover_image`) points at it. The blue rectangle in the catalog IS the
+error message. 1.0.0 and 1.0.1 shipped a 1200×801, 620 KB cover and never showed
+it.
+
+`test/cover.test.js` is the only warning there is, and it checks the committed
+file, not the URL: magic bytes, size, and the manifest URL naming that same file
+on `main` — the indexer reads `main`, not the release tag.
+
+`tools/cover.mjs` builds the cover end to end (`node tools/cover.mjs`): it writes
+the source page and drives headless Chromium over the DevTools protocol, because
+`--screenshot` only writes PNG and this picture — full-bleed gradient, blurred
+sun, no flat areas — is ~270 KB as a PNG at 800×534. As JPEG it is ~55 KB.
+
 ## Gladys core constraints that are not obvious
 
 Each of these caused a real bug in the sibling `gladys-pollen` integration; the

@@ -6,11 +6,13 @@
     "en": "UV index for the locations you choose, from the Copernicus CAMS forecast.",
     "fr": "Indice UV des lieux de votre choix, via la prévision CAMS de Copernicus."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/prohand/gladys-uvindex:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/prohand/gladys-uvindex:1.0.1",
   "gladys_version": ">=4.62.0",
   "cover_image": "https://raw.githubusercontent.com/prohand/gladys-uvindex/main/cover.png",
-  "transports": ["cloud"],
+  "transports": [
+    "cloud"
+  ],
   "config_schema": [
     {
       "key": "intro",
@@ -268,26 +270,146 @@
           "required": true,
           "default": "1",
           "options": [
-            { "value": "1", "label": { "en": "Location 1", "fr": "Lieu 1" } },
-            { "value": "2", "label": { "en": "Location 2", "fr": "Lieu 2" } },
-            { "value": "3", "label": { "en": "Location 3", "fr": "Lieu 3" } },
-            { "value": "4", "label": { "en": "Location 4", "fr": "Lieu 4" } },
-            { "value": "5", "label": { "en": "Location 5", "fr": "Lieu 5" } },
-            { "value": "6", "label": { "en": "Location 6", "fr": "Lieu 6" } },
-            { "value": "7", "label": { "en": "Location 7", "fr": "Lieu 7" } },
-            { "value": "8", "label": { "en": "Location 8", "fr": "Lieu 8" } },
-            { "value": "9", "label": { "en": "Location 9", "fr": "Lieu 9" } },
-            { "value": "10", "label": { "en": "Location 10", "fr": "Lieu 10" } },
-            { "value": "11", "label": { "en": "Location 11", "fr": "Lieu 11" } },
-            { "value": "12", "label": { "en": "Location 12", "fr": "Lieu 12" } },
-            { "value": "13", "label": { "en": "Location 13", "fr": "Lieu 13" } },
-            { "value": "14", "label": { "en": "Location 14", "fr": "Lieu 14" } },
-            { "value": "15", "label": { "en": "Location 15", "fr": "Lieu 15" } },
-            { "value": "16", "label": { "en": "Location 16", "fr": "Lieu 16" } },
-            { "value": "17", "label": { "en": "Location 17", "fr": "Lieu 17" } },
-            { "value": "18", "label": { "en": "Location 18", "fr": "Lieu 18" } },
-            { "value": "19", "label": { "en": "Location 19", "fr": "Lieu 19" } },
-            { "value": "20", "label": { "en": "Location 20", "fr": "Lieu 20" } }
+            {
+              "value": "1",
+              "label": {
+                "en": "Location 1",
+                "fr": "Lieu 1"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "Location 2",
+                "fr": "Lieu 2"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "Location 3",
+                "fr": "Lieu 3"
+              }
+            },
+            {
+              "value": "4",
+              "label": {
+                "en": "Location 4",
+                "fr": "Lieu 4"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "Location 5",
+                "fr": "Lieu 5"
+              }
+            },
+            {
+              "value": "6",
+              "label": {
+                "en": "Location 6",
+                "fr": "Lieu 6"
+              }
+            },
+            {
+              "value": "7",
+              "label": {
+                "en": "Location 7",
+                "fr": "Lieu 7"
+              }
+            },
+            {
+              "value": "8",
+              "label": {
+                "en": "Location 8",
+                "fr": "Lieu 8"
+              }
+            },
+            {
+              "value": "9",
+              "label": {
+                "en": "Location 9",
+                "fr": "Lieu 9"
+              }
+            },
+            {
+              "value": "10",
+              "label": {
+                "en": "Location 10",
+                "fr": "Lieu 10"
+              }
+            },
+            {
+              "value": "11",
+              "label": {
+                "en": "Location 11",
+                "fr": "Lieu 11"
+              }
+            },
+            {
+              "value": "12",
+              "label": {
+                "en": "Location 12",
+                "fr": "Lieu 12"
+              }
+            },
+            {
+              "value": "13",
+              "label": {
+                "en": "Location 13",
+                "fr": "Lieu 13"
+              }
+            },
+            {
+              "value": "14",
+              "label": {
+                "en": "Location 14",
+                "fr": "Lieu 14"
+              }
+            },
+            {
+              "value": "15",
+              "label": {
+                "en": "Location 15",
+                "fr": "Lieu 15"
+              }
+            },
+            {
+              "value": "16",
+              "label": {
+                "en": "Location 16",
+                "fr": "Lieu 16"
+              }
+            },
+            {
+              "value": "17",
+              "label": {
+                "en": "Location 17",
+                "fr": "Lieu 17"
+              }
+            },
+            {
+              "value": "18",
+              "label": {
+                "en": "Location 18",
+                "fr": "Lieu 18"
+              }
+            },
+            {
+              "value": "19",
+              "label": {
+                "en": "Location 19",
+                "fr": "Lieu 19"
+              }
+            },
+            {
+              "value": "20",
+              "label": {
+                "en": "Location 20",
+                "fr": "Lieu 20"
+              }
+            }
           ]
         },
         {

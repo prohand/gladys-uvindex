@@ -20,16 +20,17 @@ endpoint: the manifest declares `"location": true`, the install screen shows the
 request, and the core answers 403 to an integration that did not ask. It is also
 why `gladys_version` is `>=4.85.0`.
 
-Every device carries six features:
+Every device carries seven features:
 
-| Feature                  | Category    | What it is                                                                 |
-| ------------------------ | ----------- | -------------------------------------------------------------------------- |
-| UV index                 | `uv-sensor` | The index right now, as a whole number                                     |
-| UV index max today       | `uv-sensor` | Today's peak — the number to plan an afternoon around                      |
-| UV index (clear sky)     | `uv-sensor` | What it would be with no clouds: the difference is the cloud cover's doing |
-| UV exposure level        | `risk`      | 0–5, the WHO exposure categories (see below) — the one to test in a scene  |
-| UV exposure level (text) | `text`      | Its wording: "Faible", "Élevé"…                                            |
-| Sun protection advice    | `text`      | The WHO recommendation for that level                                      |
+| Feature                  | Category    | What it is                                                                    |
+| ------------------------ | ----------- | ----------------------------------------------------------------------------- |
+| UV index                 | `uv-sensor` | The index right now, as a whole number                                        |
+| UV index max today       | `uv-sensor` | Today's peak — the number to plan an afternoon around                         |
+| UV index (clear sky)     | `uv-sensor` | What it would be with no clouds: the difference is the cloud cover's doing    |
+| UV exposure level        | `risk`      | 0–5, the WHO exposure categories (see below) — the one to test in a scene     |
+| UV exposure level (text) | `text`      | Its wording: "Faible", "Élevé"…                                               |
+| Sun protection advice    | `text`      | The WHO recommendation for that level                                         |
+| Data updated at          | `text`      | The hour of the forecast the values come from, in the local time of the point |
 
 ## Where the data comes from
 

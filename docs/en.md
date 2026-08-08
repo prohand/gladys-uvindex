@@ -82,6 +82,7 @@ Two things to know about removal:
 | UV exposure level        | 0–5, the WHO categories: the feature to test in a scene                         |
 | UV exposure level (text) | Its wording: "Low", "High"…                                                     |
 | Sun protection advice    | The WHO recommendation for that level                                           |
+| Data updated at          | The hour of the forecast the values come from, in the local time of the point   |
 
 ### The scale
 
@@ -107,6 +108,22 @@ When the model has no value for a location, **nothing is published** for that
 feature and the device keeps its last known value. Publishing a 0 would look like
 sunset in the middle of the afternoon, and would fire the scenes that watch for
 it.
+
+### How old is the data?
+
+**Data updated at** is the hour of the CAMS forecast the values on the device
+come from, written in the **local time of the point** — a location in Sydney
+and one in Nantes never show the same one, which is why it sits on each station
+rather than on a device of its own.
+
+It is not the moment the integration last asked. The forecast has an hourly
+resolution, so reading it three times in an hour returns the same timestamp
+three times, and that is the point: it tells you how old the numbers are, not
+how often they were fetched. When a refresh fails, nothing is published at all —
+the timestamp stops moving and the age becomes visible on the dashboard.
+
+"Test the UV provider" ends each line with the same timestamp, so a source that
+answers with yesterday's hour shows up as what it is.
 
 ## General settings
 

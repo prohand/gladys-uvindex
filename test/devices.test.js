@@ -110,7 +110,7 @@ test('every feature declares an explicit min and max', () => {
     createFakeGladys(),
     normalizeConfig({ locations: [NANTES] }),
   );
-  assert.equal(device.features.length, 6);
+  assert.equal(device.features.length, 7);
   for (const feature of device.features) {
     assert.equal(typeof feature.min, 'number', feature.external_id);
     assert.equal(typeof feature.max, 'number', feature.external_id);
@@ -139,6 +139,8 @@ test('the numeric indices are UV sensors carrying the UV index unit', () => {
   assert.equal(byKey[FEATURE.EXPOSURE_LEVEL].max, UV_LEVEL_MAX);
   assert.equal(byKey[FEATURE.PROTECTION_ADVICE].category, DEVICE_FEATURE_CATEGORIES.TEXT);
   assert.equal(byKey[FEATURE.PROTECTION_ADVICE].keep_history, false, 'a label is not a measure');
+  assert.equal(byKey[FEATURE.MEASURED_AT].category, DEVICE_FEATURE_CATEGORIES.TEXT);
+  assert.equal(byKey[FEATURE.MEASURED_AT].keep_history, false, 'a date is not a measure either');
 });
 
 test('the names follow the configured language', () => {
@@ -164,11 +166,12 @@ test('a reading becomes one state per feature', () => {
       uvIndexMaxToday: 8,
       uvIndexClearSky: 9,
       level: UV_LEVELS.HIGH,
+      measuredAt: '2026-08-06T14:00',
     },
     'fr',
   );
 
-  assert.equal(states.length, 6);
+  assert.equal(states.length, 7);
   const byKey = Object.fromEntries(
     states.map((state) => [state.device_feature_external_id.split(':').pop(), state]),
   );
@@ -178,6 +181,7 @@ test('a reading becomes one state per feature', () => {
   assert.equal(byKey[FEATURE.EXPOSURE_LEVEL].state, UV_LEVELS.HIGH);
   assert.equal(byKey[FEATURE.EXPOSURE_LEVEL_TEXT].text, 'Élevé');
   assert.match(byKey[FEATURE.PROTECTION_ADVICE].text, /évitez le soleil/);
+  assert.equal(byKey[FEATURE.MEASURED_AT].text, '06/08/2026 à 14:00');
 });
 
 test('the text states are written in the language of the features carrying them', () => {
@@ -187,6 +191,47 @@ test('the text states are written in the language of the features carrying them'
     state.device_feature_external_id.endsWith(FEATURE.EXPOSURE_LEVEL_TEXT),
   );
   assert.equal(text.text, 'High');
+});
+
+test('the data timestamp follows the language of the device', () => {
+  const ids = createFakeGladys().externalIds('uv-station', 'loc-abc12345');
+  const stamp = (language) =>
+    buildStates(
+      ids,
+      { uvIndex: 7, level: UV_LEVELS.HIGH, measuredAt: '2026-08-06T14:00' },
+      language,
+    ).find((state) => state.device_feature_external_id.endsWith(FEATURE.MEASURED_AT)).text;
+
+  assert.equal(stamp('fr'), '06/08/2026 à 14:00');
+  assert.equal(stamp('en'), '2026-08-06 14:00');
+});
+
+test('the data timestamp is not published without the index it dates', () => {
+  // A fresh timestamp next to a number that was NOT refreshed reads as data
+  // that just arrived. Better no timestamp than a lying one.
+  const ids = createFakeGladys().externalIds('uv-station', 'loc-abc12345');
+  const states = buildStates(ids, {
+    uvIndex: null,
+    uvIndexMaxToday: 4,
+    level: null,
+    measuredAt: '2026-08-06T14:00',
+  });
+
+  assert.equal(
+    states.find((state) => state.device_feature_external_id.endsWith(FEATURE.MEASURED_AT)),
+    undefined,
+  );
+});
+
+test('an unreadable timestamp publishes no state rather than a broken one', () => {
+  const ids = createFakeGladys().externalIds('uv-station', 'loc-abc12345');
+  const states = buildStates(ids, { uvIndex: 7, level: UV_LEVELS.HIGH, measuredAt: null });
+
+  assert.equal(states.length, 4, 'the index, the level and its two labels — and nothing more');
+  assert.equal(
+    states.find((state) => state.device_feature_external_id.endsWith(FEATURE.MEASURED_AT)),
+    undefined,
+  );
 });
 
 test('a missing value publishes nothing at all for that feature', () => {
@@ -227,7 +272,7 @@ test('polling a location publishes its states to Gladys', async () => {
 
   await poll(gladys, location, 'fr');
 
-  assert.equal(gladys.published.length, 6);
+  assert.equal(gladys.published.length, 7);
   const uvIndex = gladys.published.find((state) =>
     state.featureExternalId.endsWith(FEATURE.UV_INDEX),
   );
@@ -322,6 +367,21 @@ test('the provider test reports every location, numbered like the listing', asyn
   assert.match(message.fr, /UV 7 \(Élevé\)/);
   assert.match(message.fr, /max du jour 8/);
   assert.equal(message.fr.split('•').length - 1, 2, 'one bulleted entry per location');
+});
+
+test('the provider test dates the data it read', async () => {
+  // "Is it working?" is only half answered by an answer: a provider serving
+  // yesterday's hour is up and still wrong.
+  stubFetch({
+    current: { time: '2026-08-06T14:00', uv_index: 7.2 },
+    hourly: { uv_index: [7.8] },
+  });
+  const config = normalizeConfig({ locations: [NANTES] });
+
+  const message = await uvStation.actions.test_provider(createFakeGladys(), { config });
+
+  assert.match(message.fr, /màj 06\/08\/2026 à 14:00/);
+  assert.match(message.en, /updated 2026-08-06 14:00/);
 });
 
 test('the provider test says how many locations failed, and why', async () => {

@@ -7,11 +7,17 @@
 // configuration it is handed.
 //
 // Features: the UV index now, its peak for today, what it would be without
-// clouds, the WHO exposure level (0-5), its wording, and the protection advice
-// that goes with it. The index and the level are BOTH published because they
-// answer different questions — "how strong is it" and "what do I do about it" —
-// and a scene is far easier to write against a level than against a threshold
-// the user has to look up.
+// clouds, the WHO exposure level (0-5), its wording, the protection advice that
+// goes with it, and the timestamp of the data. The index and the level are BOTH
+// published because they answer different questions — "how strong is it" and
+// "what do I do about it" — and a scene is far easier to write against a level
+// than against a threshold the user has to look up.
+//
+// The timestamp lives HERE, on each station, and not on a device of its own: it
+// is the hour of the forecast the reading was taken from, in the local time of
+// the point (see src/uv/measuredAt.js), so two locations in two time zones do
+// not share it and a global "last update" device would have to lie about one of
+// them.
 //
 // The identity of a device is `<type>:<location id>`, and the location id is
 // generated once when the user adds the location: renaming a location, or
@@ -27,6 +33,7 @@ import {
 } from '@gladysassistant/integration-sdk';
 import { DEFAULT_LANGUAGE, inLanguage } from '../language.js';
 import { findProvider, readUvIndex } from '../uv/index.js';
+import { formatMeasuredAt } from '../uv/measuredAt.js';
 import { UV_INDEX_MAX, UV_LEVEL_ADVICE, UV_LEVEL_LABELS, UV_LEVEL_MAX } from '../uv/scale.js';
 import {
   describeLocation,
@@ -53,6 +60,7 @@ export const FEATURE = {
   EXPOSURE_LEVEL: 'exposure-level',
   EXPOSURE_LEVEL_TEXT: 'exposure-level-text',
   PROTECTION_ADVICE: 'protection-advice',
+  MEASURED_AT: 'measured-at',
 };
 
 /** Names of the features, in the two languages the device names can be in. */
@@ -66,6 +74,7 @@ const FEATURE_NAMES = {
     fr: "Niveau d'exposition UV (texte)",
   },
   [FEATURE.PROTECTION_ADVICE]: { en: 'Sun protection advice', fr: 'Conseil de protection solaire' },
+  [FEATURE.MEASURED_AT]: { en: 'Data updated at', fr: 'Données mises à jour le' },
 };
 
 /** Shape shared by the three numeric UV index features. */
@@ -193,6 +202,7 @@ export function buildDevice(gladys, location, language = DEFAULT_LANGUAGE) {
         featureName(FEATURE.EXPOSURE_LEVEL_TEXT),
       ),
       textFeature(ids.feature(FEATURE.PROTECTION_ADVICE), featureName(FEATURE.PROTECTION_ADVICE)),
+      textFeature(ids.feature(FEATURE.MEASURED_AT), featureName(FEATURE.MEASURED_AT)),
     ],
   };
 }
@@ -241,6 +251,21 @@ export function buildStates(ids, reading, language = DEFAULT_LANGUAGE) {
         text: inLanguage(UV_LEVEL_ADVICE[reading.level], language),
       },
     );
+  }
+
+  // The stamp of the CURRENT index, and of nothing else: it is the hour the
+  // `uvIndex` above was taken from. Publishing it when that index is missing
+  // would date a value that was not published — the dashboard would show a
+  // fresh timestamp next to a stale number, which is worse than no timestamp.
+  const measuredAt =
+    reading.uvIndex === null || reading.uvIndex === undefined
+      ? null
+      : formatMeasuredAt(reading.measuredAt, language);
+  if (measuredAt !== null) {
+    states.push({
+      device_feature_external_id: ids.feature(FEATURE.MEASURED_AT),
+      text: measuredAt,
+    });
   }
 
   return states;
@@ -376,13 +401,19 @@ export const uvStation = {
       const { lines, failed } = await readEachLocation(config, locations, async (location) => {
         const reading = await readUvIndex(location);
         const level = reading.level ?? 0;
+        // The data timestamp answers the other half of "is it working?": a
+        // provider that responds with yesterday's hour is up and still wrong.
+        const stampedIn = (language) => {
+          const stamp = formatMeasuredAt(reading.measuredAt, language);
+          return stamp === null ? '' : `, ${language === 'en' ? 'updated' : 'màj'} ${stamp}`;
+        };
         return {
           en:
             `UV ${reading.uvIndex ?? '—'} (${UV_LEVEL_LABELS[level].en}), ` +
-            `max today ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}`,
+            `max today ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}${stampedIn('en')}`,
           fr:
             `UV ${reading.uvIndex ?? '—'} (${UV_LEVEL_LABELS[level].fr}), ` +
-            `max du jour ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}`,
+            `max du jour ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}${stampedIn('fr')}`,
         };
       });
 

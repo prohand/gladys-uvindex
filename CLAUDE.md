@@ -229,6 +229,14 @@ cloning when in doubt (`GladysAssistant/Gladys`, public).
 - **Ambiguity is resolved by the user, never by picking the first answer.** A
   postal code covering several communes returns them all and asks; reporting the
   UV of the wrong town is a failure nobody would notice.
+- **The data timestamp is TEXT, and it is never parsed into a `Date`**
+  (`src/uv/measuredAt.js`). A provider's `measuredAt` is the LOCAL wall-clock
+  time at the point (`timezone=auto`); `new Date('2026-08-06T14:00')` reads it in
+  the container's zone — UTC in production — so a Paris afternoon would be
+  re-rendered as noon. The fields are read as text and re-written as text.
+  It is also published per STATION, not on a global device: two locations in two
+  time zones do not share an hour. And it stamps the CURRENT index only, so it is
+  published only when that index is.
 - **A refresh cycle never throws.** A rejection inside a timer callback would
   take the container down; one location failing must not silence the others.
 

@@ -85,6 +85,7 @@ Deux choses à savoir sur la suppression :
 | Niveau d'exposition UV         | De 0 à 5, les catégories de l'OMS : la fonctionnalité à tester dans un scénario          |
 | Niveau d'exposition UV (texte) | Son libellé : « Faible », « Élevé »…                                                     |
 | Conseil de protection solaire  | La recommandation de l'OMS pour ce niveau                                                |
+| Données mises à jour le        | L'heure de la prévision d'où viennent les valeurs, dans l'heure locale du lieu           |
 
 ### L'échelle
 
@@ -111,6 +112,22 @@ Quand le modèle n'a pas de valeur pour un lieu, **rien n'est publié** pour la
 fonctionnalité concernée : l'appareil garde sa dernière valeur connue. Publier un
 0 ferait croire à un coucher de soleil en plein après-midi et déclencherait les
 scénarios correspondants.
+
+### Les données datent de quand ?
+
+**Données mises à jour le** indique l'heure de la prévision CAMS d'où viennent
+les valeurs de l'appareil, écrite dans l'**heure locale du lieu** — un lieu à
+Sydney et un lieu à Nantes n'affichent jamais la même, et c'est pourquoi cette
+fonctionnalité est portée par chaque station plutôt que par un appareil unique.
+
+Ce n'est pas l'heure de la dernière interrogation. La prévision est horaire :
+la lire trois fois dans l'heure renvoie trois fois le même horodatage, et c'est
+justement l'intérêt — il dit l'âge des chiffres, pas la fréquence des appels.
+Quand un rafraîchissement échoue, rien n'est publié du tout : l'horodatage
+cesse d'avancer et l'ancienneté devient visible sur le tableau de bord.
+
+« Tester le fournisseur UV » termine chaque ligne par ce même horodatage : une
+source qui répond avec l'heure d'hier se voit immédiatement.
 
 ## Réglages généraux
 

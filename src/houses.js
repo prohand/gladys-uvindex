@@ -9,7 +9,7 @@
 // locations.
 //
 // WHY IT IS NOT THE SDK. `GET /house` was opened by Gladys 4.85.0 and the
-// JavaScript SDK does not wrap it yet (0.11.0), so the call is made by hand with
+// JavaScript SDK does not wrap it yet (0.12.0), so the call is made by hand with
 // the credentials the supervisor injects into the container — the two variables
 // the SDK itself reads, and nothing more.
 //

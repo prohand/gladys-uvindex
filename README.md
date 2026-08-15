@@ -17,8 +17,13 @@ longer want, and each one gets its own device.
 The one-click button reads the houses the user already placed on the map in
 Gladys (`GET /house`, opened by Gladys 4.85.0). That is a permission, not just an
 endpoint: the manifest declares `"location": true`, the install screen shows the
-request, and the core answers 403 to an integration that did not ask. It is also
-why `gladys_version` is `>=4.85.0`.
+request, and the core answers 403 to an integration that did not ask. That alone
+needs Gladys 4.85.0; `gladys_version` is `>=4.86.0` because the manifest also
+declares its catalog `categories`, a field older cores reject outright.
+
+In the store catalog this integration sits on the **`environment`** shelf, the
+one the store's own seed mapping already assigned it — the UV index is outdoor
+data about the place, not a `climate` device to steer.
 
 Every device carries seven features:
 

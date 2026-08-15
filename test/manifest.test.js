@@ -45,6 +45,23 @@ const ALLOWED_FIELD_TYPES = [
   'section',
 ];
 
+// The browse categories of the store catalog (Gladys 4.86+), a controlled
+// vocabulary: they are the shelves of the catalog, not the technical `type`.
+const CATALOG_CATEGORIES = [
+  'climate',
+  'lighting',
+  'energy',
+  'security',
+  'multimedia',
+  'appliances',
+  'environment',
+  'protocols',
+  'network',
+  'notifications',
+  'assistants',
+  'services',
+];
+
 /** Every field of the manifest, config fields and action fields alike. */
 function allFields() {
   return [
@@ -309,6 +326,41 @@ test('the compatibility range covers the version that opened GET /house', () => 
   // rejects the manifest field, and the whole integration with it: the range is
   // what keeps this version away from the instances it cannot run on.
   assert.match(manifest.gladys_version, /^>=4\.(8[5-9]|9\d|\d{3,})\./);
+});
+
+test('the catalog categories stay inside the controlled vocabulary', () => {
+  // The shelves the integration sits on in the catalog. The store validates
+  // this in two stages: the SHAPE rejects (1-3 unique non-empty strings), the
+  // VOCABULARY only filters — an unknown key is dropped with a warning nobody
+  // reads and the integration lands under "All" alone, which is the same kind
+  // of silent failure as the cover image.
+  assert.ok(Array.isArray(manifest.categories), 'an uncategorized integration sits on no shelf');
+  assert.ok(
+    manifest.categories.length >= 1 && manifest.categories.length <= 3,
+    `categories must hold 1 to 3 keys, got ${manifest.categories.length}`,
+  );
+  assert.equal(new Set(manifest.categories).size, manifest.categories.length, 'keys are unique');
+  for (const category of manifest.categories) {
+    assert.ok(
+      CATALOG_CATEGORIES.includes(category),
+      `"${category}" is not a category of the store vocabulary`,
+    );
+  }
+});
+
+test('declaring categories requires a compatibility range starting at 4.86.0', () => {
+  // Older cores validate a manifest against a strict allowlist of top-level
+  // fields and reject the whole thing on an unknown one: `categories` is only
+  // readable from 4.86.0 on. The store enforces the coupling as an error, and
+  // an instance that slipped through would refuse the install with nothing but
+  // "The integration manifest is invalid."
+  const minimum = manifest.gladys_version.match(/^>=\s*(\d+)\.(\d+)\./);
+  assert.ok(minimum, 'gladys_version must declare a minimum version');
+  const [, major, minor] = minimum.map(Number);
+  assert.ok(
+    major > 4 || (major === 4 && minor >= 86),
+    `categories requires gladys_version >=4.86.0, got "${manifest.gladys_version}"`,
+  );
 });
 
 test('the manifest declares the cloud transport only', () => {

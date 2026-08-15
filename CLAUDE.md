@@ -107,14 +107,15 @@ applies to the devices still to be created, which the manifest description and
 latitude, longitude }` per house, sorted by name — and `import_houses` turns
 every house not already watched into a location.
 
-- **The SDK does not wrap that endpoint** (0.11.0), so the call is made by hand
-  with `GLADYS_HOST_API_URL` / `GLADYS_INTEGRATION_TOKEN`. Re-check on an SDK
-  bump; a wrapper is the better caller once it exists.
+- **The SDK does not wrap that endpoint** (re-checked on 0.12.0), so the call is
+  made by hand with `GLADYS_HOST_API_URL` / `GLADYS_INTEGRATION_TOKEN`. Re-check
+  on an SDK bump; a wrapper is the better caller once it exists.
 - **`"location": true` in the manifest is an authorization contract**, shown on
   the install screen and enforced server-side. Without it the core answers
   **403**, which is why `HOUSE_ACCESS_DENIED` exists: it is not an outage, and
-  the only fix is re-installing the integration. It is also why `gladys_version`
-  is `>=4.85.0` — the version that opened the endpoint and accepts the field.
+  the only fix is re-installing the integration. It needs Gladys 4.85.0, the
+  version that opened the endpoint and accepts the field — `gladys_version` is
+  `>=4.86.0` for the reason below.
 - **`latitude`/`longitude` are `null` for a house never placed on the map.**
   `Number(null)` is 0, so they go through `toCoordinate`, and such a house is
   named in the answer rather than watched off the coast of Ghana.
@@ -159,6 +160,26 @@ Config/action field types: `string` (not `text`), `number`, `boolean`, `select`,
 
 Do not hand-edit `version` or `docker_image` in the manifest — the release
 workflow rewrites both.
+
+### `categories` are shelves, and a wrong key fails silently
+
+`categories` (Gladys 4.86+) is what puts the integration on a catalog shelf; the
+vocabulary is `climate`, `lighting`, `energy`, `security`, `multimedia`,
+`appliances`, `environment`, `protocols`, `network`, `notifications`,
+`assistants`, `services`, and this one declares **`environment`** — the shelf the
+store's own `data/category-fallback.json` already assigned it, alongside
+`gladys-openweather` and `gladys-meteo-france`. `climate` in this vocabulary is
+heating and air conditioning, not the weather.
+
+- **The shape rejects, the vocabulary only filters.** 1-3 unique non-empty
+  strings or the manifest is refused; a key outside the vocabulary is _dropped_
+  with a warning in the store's `rejected.json`, and the integration is indexed
+  with no shelf at all. Like the cover image, the failure is a thing that does
+  not appear rather than an error anyone sees, hence the test.
+- **Declaring it forces `gladys_version` to `>=4.86.0`.** Older cores validate
+  the manifest against a strict top-level allowlist and reject the whole file on
+  an unknown field. The store enforces the coupling as an error; both sides are
+  pinned in `test/manifest.test.js`.
 
 ### The cover is validated by the store, and failing is silent
 

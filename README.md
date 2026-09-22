@@ -15,11 +15,24 @@ tab, ready to be added to Gladys. Add as many as you like, remove the ones you n
 longer want, and each one gets its own device.
 
 The one-click button reads the houses the user already placed on the map in
-Gladys (`GET /house`, opened by Gladys 4.85.0). That is a permission, not just an
-endpoint: the manifest declares `"location": true`, the install screen shows the
-request, and the core answers 403 to an integration that did not ask. That alone
-needs Gladys 4.85.0; `gladys_version` is `>=4.86.0` because the manifest also
-declares its catalog `categories`, a field older cores reject outright.
+Gladys (`gladys.getHouses()`, `GET /house`, opened by Gladys 4.85.0). That is a
+permission, not just an endpoint: the manifest declares `"location": true`, the
+install screen shows the request, and the core answers 403 to an integration that
+did not ask.
+
+Since Gladys 5.1 the integration also brings:
+
+- **two dashboard widgets** — `uv_location` (one location: tiles, today's hourly
+  forecast curve with its peak, level and advice) and `uv_overview` (every
+  location, one coloured row each);
+- **a scene trigger**, `exposure_level_changed` — the exposure level of a location
+  moved to another band, filterable by location, new level and direction;
+- **a scene action**, `read_uv_index` — read a location now and hand its values
+  (index, peak and its hour, level, advice…) to the next actions of the scene.
+
+`gladys_version` is therefore `>=5.1.0`: `widgets`, `scene_triggers` and
+`scene_actions` are manifest fields older cores reject outright, like
+`categories` before them (4.86.0).
 
 In the store catalog this integration sits on the **`environment`** shelf, the
 one the store's own seed mapping already assigned it — the UV index is outdoor
@@ -99,9 +112,12 @@ claims the WHO named it. See [`src/uv/scale.js`](./src/uv/scale.js).
 │  ├─ locationEditor.js              # the four buttons that add/import/list/remove them
 │  ├─ language.js                    # the language the DEVICE NAMES are written in
 │  ├─ richText.js                    # the only emphasis the config screen renders
+│  ├─ widgets.js                     # dashboard widget contents (Gladys 5.1+)
+│  ├─ scenes.js                      # scene trigger + scene action (Gladys 5.1+)
 │  ├─ uv/
 │  │  ├─ index.js                    #   provider registry + readUvIndex
 │  │  ├─ openMeteo.js                #   the CAMS provider
+│  │  ├─ measuredAt.js               #   the data timestamp, kept as text
 │  │  └─ scale.js                    #   UV index -> level, wording, advice
 │  └─ devices/
 │     ├─ index.js                    #   device registry

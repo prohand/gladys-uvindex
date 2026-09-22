@@ -60,6 +60,24 @@ function dailyMaximum(series) {
   return values.length === 0 ? null : Math.max(...values);
 }
 
+/**
+ * Today's hourly curve, one `{ time, uvIndex }` per hour.
+ *
+ * `time` is kept exactly as Open-Meteo wrote it — the LOCAL wall-clock hour at
+ * the point (`timezone=auto`), never parsed into a `Date` (see
+ * `./measuredAt.js`). An hour the model has no value for stays in the list with
+ * a null index: it is a hole in the forecast, not a zero.
+ * @param {{ time?: unknown, uv_index?: unknown }} [hourly] the `hourly` block
+ */
+function hourlyCurve(hourly) {
+  const times = Array.isArray(hourly?.time) ? hourly.time : [];
+  const series = Array.isArray(hourly?.uv_index) ? hourly.uv_index : [];
+  return times.map((time, index) => ({
+    time: String(time),
+    uvIndex: toNullableNumber(series[index]),
+  }));
+}
+
 export const openMeteoProvider = {
   key: 'open-meteo-cams',
 
@@ -85,6 +103,8 @@ export const openMeteoProvider = {
    *   uvIndexClearSky: number|null,
    *   uvIndexMaxToday: number|null,
    *   measuredAt: string|null,
+   *   hourly: Array<{ time: string, uvIndex: number|null }>,
+   *   utcOffsetSeconds: number|null,
    * }>} raw (unrounded) indices; a value the model has none for is null, which
    *   the caller turns into "no state published".
    */
@@ -132,6 +152,10 @@ export const openMeteoProvider = {
       uvIndexClearSky: toNullableNumber(current.uv_index_clear_sky),
       uvIndexMaxToday: dailyMaximum(body.hourly?.uv_index),
       measuredAt: current.time ?? null,
+      // The curve and the offset of the local time it is written in: the two
+      // things a dashboard chart needs to place today's hours on a real axis.
+      hourly: hourlyCurve(body.hourly),
+      utcOffsetSeconds: toNullableNumber(body.utc_offset_seconds),
     };
 
     cache.set(cacheKey, { at: Date.now(), value });

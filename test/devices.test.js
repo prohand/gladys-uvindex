@@ -16,7 +16,9 @@ import {
   uvStation,
   watchedLocations,
 } from '../src/devices/uvStation.js';
+import { clearLevelMemory, SCENE_TRIGGER } from '../src/scenes.js';
 import { clearUvCache } from '../src/uv/openMeteo.js';
+import { WIDGET } from '../src/widgets.js';
 import { UV_INDEX_MAX, UV_LEVEL_MAX, UV_LEVELS } from '../src/uv/scale.js';
 import { createFakeGladys } from './helpers/fakeGladys.js';
 
@@ -37,6 +39,7 @@ function stubFetch(payload) {
 
 beforeEach(() => {
   clearUvCache();
+  clearLevelMemory();
 });
 
 afterEach(() => {
@@ -277,6 +280,53 @@ test('polling a location publishes its states to Gladys', async () => {
     state.featureExternalId.endsWith(FEATURE.UV_INDEX),
   );
   assert.equal(uvIndex.state, 7);
+});
+
+test('a change of exposure level fires the scene trigger, the first reading does not', async () => {
+  const gladys = createFakeGladys();
+  const [location] = normalizeConfig({ locations: [NANTES] }).locations;
+
+  stubFetch({ current: { time: '2026-08-06T11:00', uv_index: 2.2 }, hourly: { uv_index: [] } });
+  await poll(gladys, location, 'fr');
+  assert.deepEqual(gladys.sceneEvents, [], 'a start is not a change in the sky');
+
+  clearUvCache();
+  stubFetch({ current: { time: '2026-08-06T12:00', uv_index: 6.1 }, hourly: { uv_index: [] } });
+  await poll(gladys, location, 'fr');
+
+  assert.equal(gladys.sceneEvents.length, 1);
+  const [event] = gladys.sceneEvents;
+  assert.equal(event.key, SCENE_TRIGGER.LEVEL_CHANGED);
+  assert.equal(event.data.location, deviceExternalIds(gladys, location).device);
+  assert.equal(event.data.level, UV_LEVELS.HIGH);
+  assert.equal(event.data.previous_level, UV_LEVELS.LOW);
+  assert.equal(event.data.direction, 'rising');
+  assert.equal(event.data.level_label, 'Élevé');
+});
+
+test('a scene event Gladys refuses does not cost the location its states', async () => {
+  const gladys = createFakeGladys();
+  gladys.publishSceneEvent = async () => {
+    throw new Error('404 NOT_FOUND');
+  };
+  const [location] = normalizeConfig({ locations: [NANTES] }).locations;
+
+  stubFetch({ current: { uv_index: 1 }, hourly: { uv_index: [] } });
+  await poll(gladys, location, 'fr');
+  clearUvCache();
+  stubFetch({ current: { uv_index: 9 }, hourly: { uv_index: [] } });
+  await poll(gladys, location, 'fr');
+
+  assert.ok(gladys.published.some((state) => state.state === 9));
+});
+
+test('a refresh cycle asks the dashboard to re-pull every widget', async () => {
+  stubFetch({ current: { uv_index: 5 }, hourly: { uv_index: [5] } });
+  const gladys = createFakeGladys();
+
+  await uvStation.refresh(gladys, normalizeConfig({ locations: [NANTES] }));
+
+  assert.deepEqual(gladys.widgetRefreshes.sort(), Object.values(WIDGET).sort());
 });
 
 test('a device is routed back to the blueprint that owns it', () => {

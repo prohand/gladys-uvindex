@@ -29,6 +29,22 @@ export function findProvider(point) {
 }
 
 /**
+ * The hour of today's peak: the FIRST hour the curve reaches its maximum, so a
+ * plateau is announced when it starts rather than when it ends.
+ * @param {Array<{ time: string, uvIndex: number|null }>} curve
+ * @returns {string|null} the provider's local time, or null without a curve
+ */
+function peakTimeOf(curve) {
+  let peak = null;
+  for (const point of curve) {
+    if (point.uvIndex !== null && (peak === null || point.uvIndex > peak.uvIndex)) {
+      peak = point;
+    }
+  }
+  return peak?.time ?? null;
+}
+
+/**
  * Read a location and grade its UV index.
  *
  * Every index is returned ROUNDED, because that is the form the WHO scale is
@@ -43,7 +59,11 @@ export function findProvider(point) {
  *   level: number|null,
  *   levelMaxToday: number|null,
  *   measuredAt: string|null,
- * }>}
+ *   peakTime: string|null,
+ *   forecast: Array<{ time: string, uvIndex: number }>,
+ *   utcOffsetSeconds: number|null,
+ * }>} `forecast` is today's hourly curve, rounded like everything else, the
+ *   hours without a value left out; empty for a provider that has no curve.
  */
 export async function readUvIndex(location) {
   const provider = findProvider(location);
@@ -52,6 +72,7 @@ export async function readUvIndex(location) {
   }
 
   const reading = await provider.fetchUvIndex(location);
+  const curve = Array.isArray(reading.hourly) ? reading.hourly : [];
 
   return {
     provider: provider.key,
@@ -61,5 +82,10 @@ export async function readUvIndex(location) {
     level: uvIndexToLevel(reading.uvIndex),
     levelMaxToday: uvIndexToLevel(reading.uvIndexMaxToday),
     measuredAt: reading.measuredAt,
+    peakTime: peakTimeOf(curve),
+    forecast: curve
+      .map((point) => ({ time: point.time, uvIndex: roundUvIndex(point.uvIndex) }))
+      .filter((point) => point.uvIndex !== null),
+    utcOffsetSeconds: reading.utcOffsetSeconds ?? null,
   };
 }

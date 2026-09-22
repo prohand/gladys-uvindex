@@ -1,6 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatMeasuredAt, parseMeasuredAt } from '../src/uv/measuredAt.js';
+import {
+  formatHour,
+  formatMeasuredAt,
+  parseMeasuredAt,
+  toIsoInstant,
+} from '../src/uv/measuredAt.js';
 
 test('the local timestamp Open-Meteo returns is read field by field', () => {
   assert.deepEqual(parseMeasuredAt('2026-08-06T14:00'), {
@@ -55,4 +60,28 @@ test('an unreadable or missing timestamp is null, never a broken string', () => 
     assert.equal(parseMeasuredAt(value), null, String(value));
     assert.equal(formatMeasuredAt(value, 'fr'), null, String(value));
   }
+});
+
+test('the hour alone is the same in both languages', () => {
+  assert.equal(formatHour('2026-08-06T14:00'), '14:00');
+  assert.equal(formatHour('not a date'), null);
+});
+
+test('an instant is the wall clock with the offset APPENDED, never converted', () => {
+  // The chart of a widget needs real instants; the hours stay the ones the
+  // provider wrote.
+  assert.equal(toIsoInstant('2026-08-06T14:00', 7200), '2026-08-06T14:00:00+02:00');
+  assert.equal(toIsoInstant('2026-08-06T14:00', 0), '2026-08-06T14:00:00+00:00');
+  assert.equal(toIsoInstant('2026-01-06T09:00', -12600), '2026-01-06T09:00:00-03:30');
+  // Parsed back, it lands on the right instant whatever the reader's zone.
+  assert.equal(
+    new Date(toIsoInstant('2026-08-06T14:00', 7200)).toISOString(),
+    '2026-08-06T12:00:00.000Z',
+  );
+});
+
+test('without an offset there is no instant, rather than a guess', () => {
+  assert.equal(toIsoInstant('2026-08-06T14:00', null), null);
+  assert.equal(toIsoInstant('2026-08-06T14:00', undefined), null);
+  assert.equal(toIsoInstant('garbage', 7200), null);
 });

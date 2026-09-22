@@ -125,13 +125,74 @@ the timestamp stops moving and the age becomes visible on the dashboard.
 "Test the UV provider" ends each line with the same timestamp, so a source that
 answers with yesterday's hour shows up as what it is.
 
+## On the dashboard
+
+Two widgets are offered in the dashboard editor (Gladys 5.1 or later), under the
+name of the integration:
+
+- **UV index of a location** — the index now, today's maximum and the clear-sky
+  index, **today's hourly forecast curve** with the peak marked and a "now" line,
+  the exposure level and the advice that goes with it. In the widget settings,
+  pick the **UV device** of the location to show: only the devices already added
+  to Gladys are listed.
+- **UV index of all locations** — one row per location (10 at most), with the
+  current index and its level, in colour. No settings.
+
+The widgets are shown in the language of whoever looks at them, and follow every
+refresh of the integration. If you remove a widget's location, the widget says
+so: pick another device in its settings.
+
+## In scenes
+
+The integration adds two cards to the scene editor (Gladys 5.1 or later), under
+the **Integrations** category.
+
+### Trigger "UV exposure level changed"
+
+Fires when the exposure level of a location moves to another band (from 0 "None"
+to 5 "Extreme"). Three filters, all optional — left empty, a filter accepts
+anything:
+
+- **Location** — the UV device of the location to watch;
+- **New level** — one level or several, for example 3 and 4;
+- **Direction** — rising or falling.
+
+The actions of the scene can reuse these values: the location name, the new
+level and its label, the previous level, the direction (`rising` or `falling`),
+the protection advice, the UV index and the time of the data. Example message:
+"UV {{triggerEvent.data.level_label}} in {{triggerEvent.data.location_name}}:
+{{triggerEvent.data.advice}}".
+
+Good to know:
+
+- The first reading after the integration starts is a baseline and fires
+  nothing: a restart is not a change in the sky.
+- To react to a **threshold** ("as soon as the level is at least 3"), use the
+  standard trigger on the device's "UV exposure level" feature instead.
+- The texts (label, advice) are written in the **language of the device names**
+  chosen in the general settings.
+
+### Action "Read the UV index"
+
+Reads a location's UV index when the scene runs it and hands its values to the
+next actions: location name, index now, today's maximum, clear-sky index, level
+and label, level and label of the peak, **time of the peak**, protection advice
+and time of the data. A value the source does not have is absent, never replaced
+by 0.
+
+Example: an "every day at 8:00" trigger, then "Read the UV index" on your home,
+then a message "UV peak {{0.1.uv_index_max_today}}
+({{0.1.level_max_today_label}}) around {{0.1.peak_time}}". The numbers (`0.1`)
+are the ones of the action in your scene: the editor offers them.
+
 ## General settings
 
 - **Language of the device names** — everything else this integration says
   already follows your Gladys language, but a device name and its feature names
   are stored as they are the moment you create the device. A device already added
   **keeps** the names it was created with: change the language, then delete the
-  device and add it again from the Discovery tab to rename it.
+  device and add it again from the Discovery tab to rename it. The texts handed
+  to your scenes (level label, advice) follow this setting too.
 - **Refresh interval** — 30 minutes by default, between 10 minutes and 6 hours.
   The CAMS forecast is hourly, so there is nothing to gain from going much below
   half an hour.

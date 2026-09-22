@@ -32,6 +32,7 @@ import {
   DEVICE_FEATURE_UNITS,
 } from '@gladysassistant/integration-sdk';
 import { DEFAULT_LANGUAGE, inLanguage } from '../language.js';
+import { announceLevelChange } from '../scenes.js';
 import { findProvider, readUvIndex } from '../uv/index.js';
 import { formatMeasuredAt } from '../uv/measuredAt.js';
 import { UV_INDEX_MAX, UV_LEVEL_ADVICE, UV_LEVEL_LABELS, UV_LEVEL_MAX } from '../uv/scale.js';
@@ -42,6 +43,7 @@ import {
   positionOf,
   usableLocations,
 } from '../locations.js';
+import { nudgeWidgets } from '../widgets.js';
 
 export const DEVICE_TYPE = 'uv-station';
 
@@ -145,6 +147,21 @@ export function deviceExternalIds(gladys, location) {
  */
 export function watchedLocations(config) {
   return usableLocations(config.locations).filter((location) => Boolean(findProvider(location)));
+}
+
+/**
+ * The watched location a device belongs to — how a widget setting or a scene
+ * field, which hold the device's external_id, find their location again.
+ * @param {import('@gladysassistant/integration-sdk').GladysIntegration} gladys
+ * @param {{ locations: import('../locations.js').Location[] }} config
+ * @param {unknown} externalId
+ * @returns {import('../locations.js').Location|undefined} undefined once the
+ *   location was removed, while its device may still exist in Gladys
+ */
+export function locationOfDevice(gladys, config, externalId) {
+  return watchedLocations(config).find(
+    (location) => deviceExternalIds(gladys, location).device === externalId,
+  );
 }
 
 /**
@@ -302,6 +319,10 @@ export async function poll(gladys, location, language = DEFAULT_LANGUAGE) {
 
   // One request for every feature of the device (batch, up to 100).
   await gladys.publishStates(states);
+
+  // AFTER the states: a scene started by the event may read the device, and
+  // must find the level it was told about.
+  await announceLevelChange(gladys, { deviceId: ids.device, location, reading, language });
   return reading;
 }
 
@@ -440,9 +461,7 @@ export const uvStation = {
    * @param {string} externalId external_id of the device to refresh
    */
   async onPoll(gladys, config, externalId) {
-    const location = watchedLocations(config).find(
-      (candidate) => deviceExternalIds(gladys, candidate).device === externalId,
-    );
+    const location = locationOfDevice(gladys, config, externalId);
     if (!location) {
       throw new Error(`No location watches the device ${externalId}`);
     }
@@ -489,6 +508,10 @@ export const uvStation = {
         }
       }),
     );
+
+    // The dashboard cards read the same provider: pull them again now, so they
+    // show what the devices were just given rather than waiting for their TTL.
+    nudgeWidgets(gladys);
 
     const failures = outcomes.filter(Boolean);
     if (failures.length === 0) {

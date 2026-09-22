@@ -107,15 +107,15 @@ applies to the devices still to be created, which the manifest description and
 latitude, longitude }` per house, sorted by name — and `import_houses` turns
 every house not already watched into a location.
 
-- **The SDK does not wrap that endpoint** (re-checked on 0.12.0), so the call is
-  made by hand with `GLADYS_HOST_API_URL` / `GLADYS_INTEGRATION_TOKEN`. Re-check
-  on an SDK bump; a wrapper is the better caller once it exists.
+- **Read through `gladys.getHouses()`** (SDK 0.14.0). It was a hand-made
+  `fetch` until the SDK wrapped it; a refusal now arrives as a `GladysApiError`
+  whose `status` is what `fetchHouses` turns into `HOUSE_ACCESS_DENIED`.
 - **`"location": true` in the manifest is an authorization contract**, shown on
   the install screen and enforced server-side. Without it the core answers
   **403**, which is why `HOUSE_ACCESS_DENIED` exists: it is not an outage, and
   the only fix is re-installing the integration. It needs Gladys 4.85.0, the
   version that opened the endpoint and accepts the field — `gladys_version` is
-  `>=4.86.0` for the reason below.
+  `>=5.1.0` for the widgets and scene cards below.
 - **`latitude`/`longitude` are `null` for a house never placed on the map.**
   `Number(null)` is 0, so they go through `toCoordinate`, and such a house is
   named in the answer rather than watched off the coast of Ghana.
@@ -149,7 +149,8 @@ because a narrower provider will need it.
 ### The manifest is a contract checked by tests
 
 `test/manifest.test.js` ties `gladys-assistant-integration.json` to the code:
-every action has a handler _and_ every handler has a button, `DEFAULT_CONFIG`
+every action has a handler _and_ every handler has a button (same for widgets and
+scene actions), `DEFAULT_CONFIG`
 matches the manifest defaults, the delete dropdown offers exactly
 `MAX_LOCATIONS` positions, postal codes and coordinates stay in `string` fields,
 `section` fields stay valueless, `docker_image` carries `version`. When you
@@ -176,7 +177,8 @@ heating and air conditioning, not the weather.
   with a warning in the store's `rejected.json`, and the integration is indexed
   with no shelf at all. Like the cover image, the failure is a thing that does
   not appear rather than an error anyone sees, hence the test.
-- **Declaring it forces `gladys_version` to `>=4.86.0`.** Older cores validate
+- **Declaring it forces `gladys_version` to `>=4.86.0`** (now `>=5.1.0`, for the
+  widgets and scene cards). Older cores validate
   the manifest against a strict top-level allowlist and reject the whole file on
   an unknown field. The store enforces the coupling as an error; both sides are
   pinned in `test/manifest.test.js`.
@@ -201,6 +203,46 @@ on `main` — the indexer reads `main`, not the release tag.
 the source page and drives headless Chromium over the DevTools protocol, because
 `--screenshot` only writes PNG and this picture — full-bleed gradient, blurred
 sun, no flat areas — is ~270 KB as a PNG at 800×534. As JPEG it is ~55 KB.
+
+### Widgets and scene cards are Gladys 5.1 capabilities
+
+`widgets`, `scene_triggers` and `scene_actions` are manifest fields Gladys 5.1.0
+introduced (SDK 0.14.0); older cores reject the whole manifest on them, hence
+`gladys_version` `>=5.1.0`, pinned by a test. The specs live in the core repo,
+`docs/specs/external-integrations/capabilities/`.
+
+- **A location is always designated by its DEVICE** (`select` + `source:
+"devices"`) in the widget setting, the trigger filter and the action field: the
+  core hands over the device `external_id`, which `locationOfDevice` maps back.
+  A position would shift when another location is removed. Only devices the
+  user already created are offered — that is the core's rule, not ours.
+- **Widgets (`src/widgets.js`) are pulled, not pushed.** `onWidgetGet` builds
+  the content from ONE `readUvIndex` (the provider cache makes it cheap), so the
+  number, its level and its advice on a card can never disagree — which is why
+  the tiles are inline values and not bound to the device features.
+  `uvStation.refresh` calls `nudgeWidgets` after each cycle. Every text is
+  `{ en, fr }`: the core renders a card in the READER's language, so
+  `config.language` plays no part there.
+- **The chart needs instants**: `toIsoInstant` APPENDS Open-Meteo's
+  `utc_offset_seconds` to the local wall-clock hour — text in, text out, still no
+  `Date`. Without an offset the chart is left out, never drawn in UTC.
+- **The trigger (`exposure_level_changed`) is an event, one per transition.**
+  It is fired from `poll()` after the states are published, by comparing with an
+  in-memory baseline per location id (`src/scenes.js`); the first reading after a
+  start only sets the baseline, a null level leaves it alone. A threshold is a
+  STATE question — the level feature and `device.new-state` answer it.
+- **The action (`read_uv_index`) never fires the trigger** and never touches the
+  baseline: a scene bound to the trigger that runs the action would loop. It
+  throws when the device's location is gone — the only error path a scene action
+  has; the scene logs it and carries on.
+- **Event data and outputs drop missing values** (`withoutMissing`) — the same
+  "null, never 0" rule as the states. Texts in them follow `config.language`:
+  a scene stores them like a device name.
+- **Keys are forever**: a widget, trigger, action, variable or output key is
+  stored in users' dashboards and scenes. Renaming one is removing it; adding a
+  `required` action field without a `default` breaks existing scenes.
+  `test/manifest.test.js` checks that the event carries exactly the declared
+  filters + variables and the action returns exactly the declared outputs.
 
 ## Gladys core constraints that are not obvious
 
@@ -267,6 +309,11 @@ Tests never touch the network: `globalThis.fetch` is stubbed per-file and
 restored in `afterEach`. `src/uv/openMeteo.js` keeps a module-level TTL cache, so
 tests that count requests must call `clearUvCache()` in `beforeEach` — otherwise
 state leaks between tests.
+
+`src/scenes.js` keeps the per-location level baseline at module level too: tests
+that poll the same location twice call `clearLevelMemory()` in `beforeEach`.
+Widget contents are checked with the SDK's own `validateWidgetContent` (`[]` =
+rendered exactly as sent).
 
 `test/helpers/fakeGladys.js` is the in-memory SDK stand-in; extend it when you
 use a new SDK method rather than mocking the SDK itself. The location editor

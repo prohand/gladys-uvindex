@@ -11,7 +11,10 @@
 //   3. publishes one discovered device per configured location, and refreshes
 //      that list every time the user adds or removes one;
 //   4. gives the location manager the two things it cannot do itself: write the
-//      configuration, and re-publish the devices when the list changes.
+//      configuration, and re-publish the devices when the list changes;
+//   5. serves the dashboard widgets (src/widgets.js) and the scene actions
+//      (src/scenes.js) declared in the manifest — Gladys 5.1+. The scene
+//      TRIGGER is fired from the refresh cycle itself (src/devices/uvStation.js).
 //
 // Environment variables provided by the Gladys supervisor to the container:
 //   - GLADYS_HOST_API_URL         (host API URL)
@@ -28,7 +31,12 @@ import {
   findBlueprintByDevice,
   locationDeviceIds,
 } from './src/devices/index.js';
+import { locationOfDevice, watchedLocations } from './src/devices/uvStation.js';
+import { fetchHouses } from './src/houses.js';
 import { createLocationEditor } from './src/locationEditor.js';
+import { createSceneActions } from './src/scenes.js';
+import { readUvIndex } from './src/uv/index.js';
+import { createWidgets } from './src/widgets.js';
 
 const gladys = new GladysIntegration();
 
@@ -141,6 +149,7 @@ const locationEditor = createLocationEditor({
     config = normalizeConfig({ ...config, ...patch });
   },
   onLocationsChanged: republish,
+  listHouses: () => fetchHouses(gladys),
   // "Has the user already created this location's device?" — the one case the
   // delete action cannot clean up on its own, and must therefore name.
   async findCreatedDevice(location) {
@@ -191,6 +200,33 @@ for (const blueprint of DEVICE_BLUEPRINTS) {
 }
 for (const [actionKey, handler] of Object.entries(locationEditor.actions)) {
   gladys.onAction(actionKey, (fields) => handler(fields));
+}
+
+// --- Dashboard widgets (manifest `widgets`) -----------------------------------
+// The core pulls a widget's content when a dashboard shows it, and again on its
+// TTL or when the refresh cycle nudges it. A setting of `source: "devices"`
+// arrives as the device's external_id, which `locationOfDevice` maps back to its
+// location.
+const widgets = createWidgets({
+  getConfig: () => config,
+  watchedLocations,
+  locationOfDevice: (current, externalId) => locationOfDevice(gladys, current, externalId),
+  readUvIndex,
+});
+for (const [widgetKey, handler] of Object.entries(widgets)) {
+  gladys.onWidgetGet(widgetKey, (request) => handler(request));
+}
+
+// --- Scene actions (manifest `scene_actions`) --------------------------------
+// A scene reached one of our cards: `fields` arrive resolved and validated by
+// the core, and the resolved object becomes the action's outputs.
+const sceneActions = createSceneActions({
+  getConfig: () => config,
+  locationOfDevice: (current, externalId) => locationOfDevice(gladys, current, externalId),
+  readUvIndex,
+});
+for (const [actionKey, handler] of Object.entries(sceneActions)) {
+  gladys.onSceneAction(actionKey, (fields) => handler(fields));
 }
 
 // --- Configuration updated by the user ---------------------------------------

@@ -130,3 +130,53 @@ test('readUvIndex keeps a missing value missing', async () => {
   assert.equal(reading.uvIndex, null);
   assert.equal(reading.level, null);
 });
+
+test('the provider keeps today’s curve and the offset of its local hours', async () => {
+  stubFetch({
+    utc_offset_seconds: 7200,
+    current: { time: '2026-08-06T14:00', uv_index: 7.2 },
+    hourly: {
+      time: ['2026-08-06T12:00', '2026-08-06T13:00', '2026-08-06T14:00'],
+      uv_index: [6.4, null, 7.2],
+    },
+  });
+
+  const reading = await openMeteoProvider.fetchUvIndex(PARIS);
+
+  assert.equal(reading.utcOffsetSeconds, 7200);
+  assert.deepEqual(reading.hourly, [
+    { time: '2026-08-06T12:00', uvIndex: 6.4 },
+    { time: '2026-08-06T13:00', uvIndex: null },
+    { time: '2026-08-06T14:00', uvIndex: 7.2 },
+  ]);
+});
+
+test('readUvIndex rounds the curve, drops its holes and dates the peak', async () => {
+  stubFetch({
+    utc_offset_seconds: 7200,
+    current: { time: '2026-08-06T14:00', uv_index: 7.2 },
+    hourly: {
+      time: ['2026-08-06T12:00', '2026-08-06T13:00', '2026-08-06T14:00', '2026-08-06T15:00'],
+      uv_index: [6.4, null, 7.8, 7.8],
+    },
+  });
+
+  const reading = await readUvIndex(PARIS);
+
+  assert.deepEqual(reading.forecast, [
+    { time: '2026-08-06T12:00', uvIndex: 6 },
+    { time: '2026-08-06T14:00', uvIndex: 8 },
+    { time: '2026-08-06T15:00', uvIndex: 8 },
+  ]);
+  // A plateau is announced when it starts.
+  assert.equal(reading.peakTime, '2026-08-06T14:00');
+  assert.equal(reading.utcOffsetSeconds, 7200);
+});
+
+test('a reading without a curve has no forecast and no peak time', async () => {
+  stubFetch({ current: { uv_index: 3 } });
+  const reading = await readUvIndex(PARIS);
+  assert.deepEqual(reading.forecast, []);
+  assert.equal(reading.peakTime, null);
+  assert.equal(reading.utcOffsetSeconds, null);
+});

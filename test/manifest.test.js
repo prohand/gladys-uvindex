@@ -14,6 +14,15 @@ import { DEVICE_BLUEPRINTS } from '../src/devices/index.js';
 import { DEFAULT_LANGUAGE, LANGUAGES } from '../src/language.js';
 import { createLocationEditor } from '../src/locationEditor.js';
 import { MAX_LOCATIONS } from '../src/locations.js';
+import {
+  buildLevelChangedEvent,
+  buildReadingOutputs,
+  createSceneActions,
+  DIRECTION,
+  SCENE_TRIGGER,
+} from '../src/scenes.js';
+import { UV_LEVEL_LABELS, UV_LEVEL_MAX } from '../src/uv/scale.js';
+import { createWidgets, WIDGET } from '../src/widgets.js';
 
 const manifest = JSON.parse(
   await readFile(new URL('../gladys-assistant-integration.json', import.meta.url), 'utf8'),
@@ -62,13 +71,44 @@ const CATALOG_CATEGORIES = [
   'services',
 ];
 
-/** Every field of the manifest, config fields and action fields alike. */
+// Every widget and scene action key the code registers.
+const NO_DEPS = {
+  getConfig: () => ({ locations: [], language: DEFAULT_LANGUAGE }),
+  watchedLocations: () => [],
+  locationOfDevice: () => undefined,
+  readUvIndex: async () => ({}),
+};
+const HANDLED_WIDGETS = Object.keys(createWidgets(NO_DEPS));
+const HANDLED_SCENE_ACTIONS = Object.keys(createSceneActions(NO_DEPS));
+
+/** A reading with every value present: what fills every output and variable. */
+const FULL_READING = {
+  provider: 'open-meteo-cams',
+  uvIndex: 7,
+  uvIndexClearSky: 8,
+  uvIndexMaxToday: 8,
+  level: 3,
+  levelMaxToday: 4,
+  measuredAt: '2026-08-06T14:00',
+  peakTime: '2026-08-06T13:00',
+  forecast: [],
+  utcOffsetSeconds: 7200,
+};
+const FULL_LOCATION = { id: 'loc-1', name: 'Maison' };
+
+/** Every field of the manifest: config, actions, widget settings, scene cards. */
 function allFields() {
   return [
     ...manifest.config_schema,
     ...(manifest.actions ?? []).flatMap((action) => action.fields ?? []),
+    ...(manifest.widgets ?? []).flatMap((widget) => widget.settings ?? []),
+    ...(manifest.scene_triggers ?? []).flatMap((trigger) => trigger.fields ?? []),
+    ...(manifest.scene_actions ?? []).flatMap((action) => action.fields ?? []),
   ];
 }
+
+/** The keys of a list of declarations. */
+const keysOf = (list) => (list ?? []).map((entry) => entry.key);
 
 function action(key) {
   return (manifest.actions ?? []).find((a) => a.key === key);
@@ -86,6 +126,96 @@ test('every manifest action has a registered handler, and vice versa', () => {
       (manifest.actions ?? []).some((declared) => declared.key === handled),
       `handler "${handled}" is not declared in the manifest: no button runs it`,
     );
+  }
+});
+
+test('every manifest widget has a content handler, and vice versa', () => {
+  assert.deepEqual(keysOf(manifest.widgets).sort(), HANDLED_WIDGETS.sort());
+  assert.deepEqual(HANDLED_WIDGETS.sort(), Object.values(WIDGET).sort());
+});
+
+test('every scene action has a handler, and vice versa', () => {
+  assert.deepEqual(keysOf(manifest.scene_actions).sort(), HANDLED_SCENE_ACTIONS.sort());
+});
+
+test('the scene trigger the code fires is the one the manifest declares', () => {
+  // publishSceneEvent answers 404 on an undeclared key: a typo here is a trigger
+  // that never fires, with nothing anywhere to say so.
+  assert.deepEqual(keysOf(manifest.scene_triggers), Object.values(SCENE_TRIGGER));
+});
+
+test('a location is always picked by its device, never by its position', () => {
+  // Positions shift when a location is removed; a device's external_id is
+  // stable for the life of the location. Every card that designates a
+  // location stores the latter.
+  const pickers = allFields().filter((field) => field.key === 'location' && field.source);
+  assert.equal(pickers.length, 3, 'the widget setting, the trigger filter, the action field');
+  for (const field of pickers) {
+    assert.equal(field.type, 'select');
+    assert.equal(field.source, 'devices');
+    assert.equal(field.default, undefined, 'a dynamic select takes no default');
+  }
+});
+
+test('the level filter offers exactly the 0-5 scale, worded like the features', () => {
+  const trigger = manifest.scene_triggers.find((t) => t.key === SCENE_TRIGGER.LEVEL_CHANGED);
+  const level = trigger.fields.find((field) => field.key === 'level');
+  assert.equal(level.type, 'multi_select');
+  assert.deepEqual(
+    level.options.map((option) => option.value),
+    Array.from({ length: UV_LEVEL_MAX + 1 }, (unused, index) => String(index)),
+  );
+  for (const option of level.options) {
+    const wording = UV_LEVEL_LABELS[Number(option.value)];
+    assert.ok(option.label.en.endsWith(wording.en), `option ${option.value} (en)`);
+    assert.ok(option.label.fr.endsWith(wording.fr), `option ${option.value} (fr)`);
+  }
+});
+
+test('the direction filter offers exactly the values the event carries', () => {
+  const trigger = manifest.scene_triggers.find((t) => t.key === SCENE_TRIGGER.LEVEL_CHANGED);
+  const direction = trigger.fields.find((field) => field.key === 'direction');
+  assert.deepEqual(
+    direction.options.map((option) => option.value).sort(),
+    Object.values(DIRECTION).sort(),
+  );
+});
+
+test('a trigger filter is never a boolean', () => {
+  // A toggle has no empty state, so it could never mean "any": the core
+  // refuses the manifest.
+  for (const trigger of manifest.scene_triggers) {
+    for (const field of trigger.fields ?? []) {
+      assert.notEqual(field.type, 'boolean', `${trigger.key}.${field.key}`);
+    }
+  }
+});
+
+test('the event carries every declared filter and variable, and nothing else', () => {
+  // The core keeps the declared keys and drops the rest silently: a variable the
+  // event never sends is an always-empty entry in the scene editor, a key sent
+  // but never declared is data thrown away.
+  const trigger = manifest.scene_triggers.find((t) => t.key === SCENE_TRIGGER.LEVEL_CHANGED);
+  const data = buildLevelChangedEvent({
+    deviceId: 'ext:uv:uv-station:loc-1',
+    location: FULL_LOCATION,
+    reading: FULL_READING,
+    transition: { previous: 2, level: 3 },
+    language: 'fr',
+  });
+  const declared = new Set([...keysOf(trigger.fields), ...keysOf(trigger.variables)]);
+  assert.deepEqual(Object.keys(data).sort(), [...declared].sort());
+  for (const variable of trigger.variables) {
+    assert.equal(typeof data[variable.key], variable.type, `variable ${variable.key}`);
+  }
+});
+
+test('the action returns exactly the declared outputs, with their declared types', () => {
+  const action = manifest.scene_actions.find((a) => a.key === 'read_uv_index');
+  const outputs = buildReadingOutputs(FULL_LOCATION, FULL_READING, 'fr');
+  assert.deepEqual(Object.keys(outputs).sort(), keysOf(action.outputs).sort());
+  for (const output of action.outputs) {
+    assert.equal(typeof outputs[output.key], output.type, `output ${output.key}`);
   }
 });
 
@@ -278,6 +408,34 @@ test('every human text is a multi-language object', () => {
       checkField(field, `action "${declared.key}".fields[${index}]`);
     }
   }
+  const cards = [
+    ...(manifest.widgets ?? []).map((card) => ['widget', card, card.settings]),
+    ...(manifest.scene_triggers ?? []).map((card) => ['scene trigger', card, card.fields]),
+    ...(manifest.scene_actions ?? []).map((card) => ['scene action', card, card.fields]),
+  ];
+  for (const [kind, card, fields] of cards) {
+    check(card.label, `${kind} "${card.key}".label`);
+    check(card.description, `${kind} "${card.key}".description`);
+    for (const [index, field] of (fields ?? []).entries()) {
+      checkField(field, `${kind} "${card.key}".fields[${index}]`);
+    }
+    for (const entry of [...(card.variables ?? []), ...(card.outputs ?? [])]) {
+      check(entry.label, `${kind} "${card.key}".${entry.key}.label`);
+    }
+  }
+});
+
+test('a widget label and description fit the dashboard picker', () => {
+  // 3-30 characters per language for the tile name, 100 for its subtitle: past
+  // either bound the core refuses the whole manifest.
+  for (const widget of manifest.widgets) {
+    for (const [language, text] of Object.entries(widget.label)) {
+      assert.ok(text.length >= 3 && text.length <= 30, `${widget.key}.label.${language}`);
+    }
+    for (const [language, text] of Object.entries(widget.description ?? {})) {
+      assert.ok(text.length <= 100, `${widget.key}.description.${language}`);
+    }
+  }
 });
 
 test('a description stays under the 1000-character limit', () => {
@@ -301,7 +459,7 @@ test('placeholders stay on the field types that render an input', () => {
 });
 
 test('an action timeout stays inside the range the core accepts', () => {
-  for (const declared of manifest.actions ?? []) {
+  for (const declared of [...(manifest.actions ?? []), ...(manifest.scene_actions ?? [])]) {
     if (declared.timeout_seconds !== undefined) {
       assert.ok(
         declared.timeout_seconds >= 5 && declared.timeout_seconds <= 120,
@@ -321,11 +479,24 @@ test('the manifest asks for the house coordinates the import button reads', () =
   );
 });
 
+/** The `[major, minor]` a `>=x.y.z` range starts at. */
+function minimumVersion() {
+  const minimum = manifest.gladys_version.match(/^>=\s*(\d+)\.(\d+)\./);
+  assert.ok(minimum, 'gladys_version must declare a minimum version');
+  return [Number(minimum[1]), Number(minimum[2])];
+}
+
+/** Whether the range starts at `major.minor` or later. */
+function startsAtLeast(major, minor) {
+  const [actualMajor, actualMinor] = minimumVersion();
+  return actualMajor > major || (actualMajor === major && actualMinor >= minor);
+}
+
 test('the compatibility range covers the version that opened GET /house', () => {
   // House coordinates landed in Gladys 4.85.0. An instance older than that
   // rejects the manifest field, and the whole integration with it: the range is
   // what keeps this version away from the instances it cannot run on.
-  assert.match(manifest.gladys_version, /^>=4\.(8[5-9]|9\d|\d{3,})\./);
+  assert.ok(startsAtLeast(4, 85), `got "${manifest.gladys_version}"`);
 });
 
 test('the catalog categories stay inside the controlled vocabulary', () => {
@@ -354,12 +525,22 @@ test('declaring categories requires a compatibility range starting at 4.86.0', (
   // readable from 4.86.0 on. The store enforces the coupling as an error, and
   // an instance that slipped through would refuse the install with nothing but
   // "The integration manifest is invalid."
-  const minimum = manifest.gladys_version.match(/^>=\s*(\d+)\.(\d+)\./);
-  assert.ok(minimum, 'gladys_version must declare a minimum version');
-  const [, major, minor] = minimum.map(Number);
   assert.ok(
-    major > 4 || (major === 4 && minor >= 86),
+    startsAtLeast(4, 86),
     `categories requires gladys_version >=4.86.0, got "${manifest.gladys_version}"`,
+  );
+});
+
+test('declaring widgets and scene cards requires a range starting at 5.1.0', () => {
+  // Same allowlist, same silent refusal: `widgets`, `scene_triggers` and
+  // `scene_actions` are only readable from Gladys 5.1.0 on, and the store
+  // rejects a manifest that declares them with a lower minimum.
+  for (const field of ['widgets', 'scene_triggers', 'scene_actions']) {
+    assert.ok(manifest[field], `the manifest declares ${field}`);
+  }
+  assert.ok(
+    startsAtLeast(5, 1),
+    `widgets and scene cards require gladys_version >=5.1.0, got "${manifest.gladys_version}"`,
   );
 });
 

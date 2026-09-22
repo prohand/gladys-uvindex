@@ -62,3 +62,43 @@ export function formatMeasuredAt(value, language = DEFAULT_LANGUAGE) {
     ? `${year}-${month}-${day} ${hour}:${minute}`
     : `${day}/${month}/${year} à ${hour}:${minute}`;
 }
+
+/**
+ * The hour alone, `HH:MM` — the same in both languages, which is why it takes
+ * none: it is what "peak at 14:00" and "pic à 14:00" share.
+ * @param {unknown} value a provider timestamp
+ * @returns {string|null}
+ */
+export function formatHour(value) {
+  const parts = parseMeasuredAt(value);
+  return parts ? `${parts.hour}:${parts.minute}` : null;
+}
+
+/**
+ * A provider timestamp as a full ISO 8601 instant, offset included — what a
+ * dashboard chart needs to place a point on a real time axis.
+ *
+ * Still text in, text out: the offset Open-Meteo reports for the point
+ * (`utc_offset_seconds`) is APPENDED to the wall-clock fields, nothing is
+ * converted. Without an offset there is no instant — a bare local time would be
+ * read in the zone of whoever parses it, the very bug the header describes — so
+ * the answer is null rather than a guess.
+ * @param {unknown} value a provider timestamp
+ * @param {unknown} utcOffsetSeconds the offset of the point's local time
+ * @returns {string|null} e.g. `2026-08-06T14:00:00+02:00`
+ */
+export function toIsoInstant(value, utcOffsetSeconds) {
+  const parts = parseMeasuredAt(value);
+  const offset = Number(utcOffsetSeconds);
+  if (!parts || utcOffsetSeconds === null || !Number.isInteger(offset)) {
+    return null;
+  }
+  const sign = offset < 0 ? '-' : '+';
+  const minutes = Math.floor(Math.abs(offset) / 60);
+  const pad = (number) => String(number).padStart(2, '0');
+  const { year, month, day, hour, minute } = parts;
+  return (
+    `${year}-${month}-${day}T${hour}:${minute}:00` +
+    `${sign}${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`
+  );
+}

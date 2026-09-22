@@ -129,6 +129,68 @@ cesse d'avancer et l'ancienneté devient visible sur le tableau de bord.
 « Tester le fournisseur UV » termine chaque ligne par ce même horodatage : une
 source qui répond avec l'heure d'hier se voit immédiatement.
 
+## Sur le tableau de bord
+
+Deux widgets sont proposés dans l'éditeur du tableau de bord (Gladys 5.1 ou
+plus récent), sous le nom de l'intégration :
+
+- **Indice UV d'un lieu** — l'indice actuel, le maximum du jour et l'indice ciel
+  clair, la **courbe horaire prévue pour aujourd'hui** avec le pic marqué et un
+  repère « maintenant », le niveau d'exposition et le conseil qui va avec. Dans
+  les réglages du widget, choisissez l'**appareil UV** du lieu à afficher : seuls
+  les appareils déjà ajoutés à Gladys sont proposés.
+- **Indice UV de tous les lieux** — une ligne par lieu (10 au maximum), avec
+  l'indice actuel et son niveau, en couleur. Aucun réglage.
+
+Les widgets s'affichent dans la langue de chaque personne qui les regarde, et se
+mettent à jour à chaque rafraîchissement de l'intégration. Si vous supprimez le
+lieu d'un widget, le widget le dit : choisissez un autre appareil dans ses
+réglages.
+
+## Dans les scènes
+
+L'intégration ajoute deux cartes à l'éditeur de scènes (Gladys 5.1 ou plus
+récent), dans la catégorie **Intégrations**.
+
+### Déclencheur « Niveau d'exposition UV changé »
+
+Se déclenche quand le niveau d'exposition d'un lieu passe dans une autre tranche
+(de 0 « Nul » à 5 « Extrême »). Trois filtres, tous facultatifs — laissé vide, un
+filtre accepte tout :
+
+- **Lieu** — l'appareil UV du lieu à surveiller ;
+- **Nouveau niveau** — un ou plusieurs niveaux, par exemple 3 et 4 ;
+- **Sens** — en hausse ou en baisse.
+
+Les actions de la scène peuvent réutiliser ces valeurs : le nom du lieu, le
+nouveau niveau et son libellé, le niveau précédent, le sens (`rising` ou
+`falling`), le conseil de protection, l'indice UV et l'heure des données. Exemple
+de message : « UV {{triggerEvent.data.level_label}} à
+{{triggerEvent.data.location_name}} : {{triggerEvent.data.advice}} ».
+
+Bon à savoir :
+
+- Le premier relevé après un démarrage de l'intégration sert de référence et ne
+  déclenche rien : un redémarrage n'est pas un changement de ciel.
+- Pour réagir à un **seuil** (« dès que le niveau est au moins 3 »), utilisez
+  plutôt le déclencheur standard sur la fonctionnalité « Niveau d'exposition
+  UV » de l'appareil.
+- Les textes (libellé, conseil) sont écrits dans la **langue du nom des
+  appareils** choisie dans les réglages généraux.
+
+### Action « Lire l'indice UV »
+
+Lit l'indice UV d'un lieu au moment où la scène l'exécute et passe ses valeurs aux
+actions suivantes : nom du lieu, indice actuel, maximum du jour, indice ciel
+clair, niveau et libellé, niveau et libellé du pic, **heure du pic**, conseil de
+protection et heure des données. Une valeur que la source n'a pas est absente,
+jamais remplacée par 0.
+
+Exemple : un déclencheur « tous les jours à 8h », puis « Lire l'indice UV » sur
+votre maison, puis un message « Pic UV {{0.1.uv_index_max_today}}
+({{0.1.level_max_today_label}}) vers {{0.1.peak_time}} ». Les numéros
+(`0.1`) sont ceux de l'action dans votre scène : l'éditeur les propose.
+
 ## Réglages généraux
 
 - **Langue du nom des appareils** — le reste de ce que dit l'intégration suit
@@ -136,7 +198,8 @@ source qui répond avec l'heure d'hier se voit immédiatement.
   fonctionnalités est enregistré tel quel au moment où vous créez l'appareil.
   Un appareil déjà ajouté **conserve** les noms avec lesquels il a été créé :
   changez la langue, puis supprimez et rajoutez l'appareil depuis la Découverte
-  pour le renommer.
+  pour le renommer. Les textes transmis aux scènes (libellé du niveau, conseil)
+  suivent aussi ce réglage.
 - **Intervalle de rafraîchissement** — 30 minutes par défaut, entre 10 minutes et
   6 heures. La prévision CAMS est horaire : descendre nettement sous la
   demi-heure n'apporte rien de plus.

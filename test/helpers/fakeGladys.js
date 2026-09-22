@@ -8,6 +8,8 @@
 //   - setConfig                     -> record the persisted config keys
 //   - getDevices                    -> the devices the user already created
 //   - setConnectionStatus           -> record the reported status
+//   - publishSceneEvent             -> record the scene events fired
+//   - requestWidgetRefresh          -> record the widget keys nudged
 // This lets us test the pure "wiring" logic (discovery payloads, state mapping,
 // the location actions) without a running Gladys server or a real WebSocket.
 //
@@ -19,12 +21,16 @@ export function createFakeGladys({ devices = [] } = {}) {
   const discovered = [];
   const configs = [];
   const statuses = [];
+  const sceneEvents = [];
+  const widgetRefreshes = [];
 
   return {
     published,
     discovered,
     configs,
     statuses,
+    sceneEvents,
+    widgetRefreshes,
 
     externalIds(type, platformId) {
       const device = `${type}:${platformId}`;
@@ -61,6 +67,15 @@ export function createFakeGladys({ devices = [] } = {}) {
     async setConnectionStatus(connected, message) {
       statuses.push({ connected, message });
       return { success: true };
+    },
+
+    async publishSceneEvent(key, data) {
+      sceneEvents.push({ key, data });
+      return { success: true };
+    },
+
+    requestWidgetRefresh(key) {
+      widgetRefreshes.push(key);
     },
   };
 }

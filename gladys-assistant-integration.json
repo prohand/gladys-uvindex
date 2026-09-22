@@ -8,14 +8,10 @@
   },
   "version": "1.0.5",
   "docker_image": "ghcr.io/prohand/gladys-uvindex:1.0.5",
-  "gladys_version": ">=4.86.0",
+  "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/prohand/gladys-uvindex/main/cover.jpg",
-  "categories": [
-    "environment"
-  ],
-  "transports": [
-    "cloud"
-  ],
+  "categories": ["environment"],
+  "transports": ["cloud"],
   "location": true,
   "config_schema": [
     {
@@ -26,8 +22,8 @@
         "fr": "Comment ça marche"
       },
       "description": {
-        "en": "Add a location with the button below: type its French postal code, it is resolved to a commune, and a UV device appears in the Discovery tab, ready to be added to Gladys. The UV index comes from the CAMS forecast (Copernicus), republished as open data by Open-Meteo, and postal codes are read through the French state's \"Découpage administratif\" API: no account and no API key are needed. Outside France, add a location by its latitude and longitude — the UV data itself is worldwide.",
-        "fr": "Ajoutez un lieu avec le bouton ci-dessous : saisissez son code postal, il est résolu en commune, puis un appareil UV apparaît dans l'onglet Découverte, prêt à être ajouté à Gladys. L'indice UV provient de la prévision CAMS (Copernicus), rediffusée en open data par Open-Meteo, et les codes postaux sont lus via l'API « Découpage administratif » de l'État : aucun compte ni clé d'API n'est nécessaire. Hors de France, ajoutez un lieu par sa latitude et sa longitude — les données UV sont mondiales."
+        "en": "Add a location with the button below: type its French postal code, it is resolved to a commune, and a UV device appears in the Discovery tab, ready to be added to Gladys. The UV index comes from the CAMS forecast (Copernicus), republished as open data by Open-Meteo, and postal codes are read through the French state's \"Découpage administratif\" API: no account and no API key are needed. Outside France, add a location by its latitude and longitude — the UV data itself is worldwide. Once a device is added, the dashboard offers two UV widgets and the scene editor a UV trigger and a UV action.",
+        "fr": "Ajoutez un lieu avec le bouton ci-dessous : saisissez son code postal, il est résolu en commune, puis un appareil UV apparaît dans l'onglet Découverte, prêt à être ajouté à Gladys. L'indice UV provient de la prévision CAMS (Copernicus), rediffusée en open data par Open-Meteo, et les codes postaux sont lus via l'API « Découpage administratif » de l'État : aucun compte ni clé d'API n'est nécessaire. Hors de France, ajoutez un lieu par sa latitude et sa longitude — les données UV sont mondiales. Une fois l'appareil ajouté, le tableau de bord propose deux widgets UV et l'éditeur de scènes un déclencheur et une action UV."
       },
       "links": [
         {
@@ -73,8 +69,8 @@
         "fr": "Langue du nom des appareils"
       },
       "description": {
-        "en": "The language the device and feature names are written in: \"Indice UV\" or \"UV index\". Everything else this integration displays already follows your Gladys language, but the name of a device and of its features is stored as it is published, so it has to be chosen here. A device already added to Gladys keeps the names it was created with: delete it and add it again from the Discovery tab to rename it.",
-        "fr": "La langue dans laquelle sont écrits les noms des appareils et de leurs fonctionnalités : « Indice UV » ou « UV index ». Tout le reste de ce que l'intégration affiche suit déjà la langue de votre compte Gladys, mais le nom d'un appareil et de ses fonctionnalités est enregistré tel qu'il est publié : il faut donc le choisir ici. Un appareil déjà ajouté à Gladys conserve les noms avec lesquels il a été créé : supprimez-le et rajoutez-le depuis l'onglet Découverte pour le renommer."
+        "en": "The language the device and feature names are written in: \"Indice UV\" or \"UV index\". Everything else this integration displays already follows your Gladys language, but the name of a device and of its features is stored as it is published, so it has to be chosen here — as do the texts the UV scene cards hand to your scenes. A device already added to Gladys keeps the names it was created with: delete it and add it again from the Discovery tab to rename it.",
+        "fr": "La langue dans laquelle sont écrits les noms des appareils et de leurs fonctionnalités : « Indice UV » ou « UV index ». Tout le reste de ce que l'intégration affiche suit déjà la langue de votre compte Gladys, mais le nom d'un appareil et de ses fonctionnalités est enregistré tel qu'il est publié : il faut donc le choisir ici, comme les textes que les cartes de scène UV transmettent à vos scènes. Un appareil déjà ajouté à Gladys conserve les noms avec lesquels il a été créé : supprimez-le et rajoutez-le depuis l'onglet Découverte pour le renommer."
       },
       "required": false,
       "default": "fr",
@@ -441,6 +437,354 @@
           },
           "required": false,
           "default": false
+        }
+      ]
+    }
+  ],
+  "widgets": [
+    {
+      "key": "uv_location",
+      "label": {
+        "en": "UV index of a location",
+        "fr": "Indice UV d'un lieu"
+      },
+      "description": {
+        "en": "The UV index now, today's peak and forecast curve, and the advice for one location.",
+        "fr": "L'indice UV actuel, le pic et la courbe du jour, et le conseil pour un lieu."
+      },
+      "icon": "sun",
+      "settings": [
+        {
+          "key": "location",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Location",
+            "fr": "Lieu"
+          },
+          "description": {
+            "en": "The UV device of the location to show. Only the devices already added to Gladys are listed.",
+            "fr": "L'appareil UV du lieu à afficher. Seuls les appareils déjà ajoutés à Gladys sont proposés."
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "uv_overview",
+      "label": {
+        "en": "UV index of all locations",
+        "fr": "Indice UV de tous les lieux"
+      },
+      "description": {
+        "en": "The current UV index and exposure level of every location, one row each.",
+        "fr": "L'indice UV actuel et le niveau d'exposition de chaque lieu, une ligne par lieu."
+      },
+      "icon": "sun"
+    }
+  ],
+  "scene_triggers": [
+    {
+      "key": "exposure_level_changed",
+      "label": {
+        "en": "UV exposure level changed",
+        "fr": "Niveau d'exposition UV changé"
+      },
+      "description": {
+        "en": "The UV exposure level of a location moved to another band (0 None to 5 Extreme).",
+        "fr": "Le niveau d'exposition UV d'un lieu est passé dans une autre tranche (0 Nul à 5 Extrême)."
+      },
+      "fields": [
+        {
+          "key": "location",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Location",
+            "fr": "Lieu"
+          },
+          "description": {
+            "en": "Leave empty to react to every location.",
+            "fr": "Laissez vide pour réagir à tous les lieux."
+          }
+        },
+        {
+          "key": "level",
+          "type": "multi_select",
+          "label": {
+            "en": "New level",
+            "fr": "Nouveau niveau"
+          },
+          "description": {
+            "en": "The level just reached. Leave empty for any level.",
+            "fr": "Le niveau qui vient d'être atteint. Laissez vide pour n'importe quel niveau."
+          },
+          "options": [
+            {
+              "value": "0",
+              "label": {
+                "en": "0 — None",
+                "fr": "0 — Nul"
+              }
+            },
+            {
+              "value": "1",
+              "label": {
+                "en": "1 — Low",
+                "fr": "1 — Faible"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "2 — Moderate",
+                "fr": "2 — Modéré"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "3 — High",
+                "fr": "3 — Élevé"
+              }
+            },
+            {
+              "value": "4",
+              "label": {
+                "en": "4 — Very high",
+                "fr": "4 — Très élevé"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "5 — Extreme",
+                "fr": "5 — Extrême"
+              }
+            }
+          ]
+        },
+        {
+          "key": "direction",
+          "type": "select",
+          "label": {
+            "en": "Direction",
+            "fr": "Sens"
+          },
+          "description": {
+            "en": "Leave empty for both.",
+            "fr": "Laissez vide pour les deux."
+          },
+          "options": [
+            {
+              "value": "rising",
+              "label": {
+                "en": "Rising",
+                "fr": "En hausse"
+              }
+            },
+            {
+              "value": "falling",
+              "label": {
+                "en": "Falling",
+                "fr": "En baisse"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "location_name",
+          "type": "string",
+          "label": {
+            "en": "Location name",
+            "fr": "Nom du lieu"
+          }
+        },
+        {
+          "key": "level",
+          "type": "number",
+          "label": {
+            "en": "New level (0-5)",
+            "fr": "Nouveau niveau (0-5)"
+          }
+        },
+        {
+          "key": "level_label",
+          "type": "string",
+          "label": {
+            "en": "New level (text)",
+            "fr": "Nouveau niveau (texte)"
+          }
+        },
+        {
+          "key": "previous_level",
+          "type": "number",
+          "label": {
+            "en": "Previous level (0-5)",
+            "fr": "Niveau précédent (0-5)"
+          }
+        },
+        {
+          "key": "previous_level_label",
+          "type": "string",
+          "label": {
+            "en": "Previous level (text)",
+            "fr": "Niveau précédent (texte)"
+          }
+        },
+        {
+          "key": "direction",
+          "type": "string",
+          "label": {
+            "en": "Direction (rising or falling)",
+            "fr": "Sens (rising ou falling)"
+          }
+        },
+        {
+          "key": "advice",
+          "type": "string",
+          "label": {
+            "en": "Sun protection advice",
+            "fr": "Conseil de protection solaire"
+          }
+        },
+        {
+          "key": "uv_index",
+          "type": "number",
+          "label": {
+            "en": "UV index",
+            "fr": "Indice UV"
+          }
+        },
+        {
+          "key": "measured_at",
+          "type": "string",
+          "label": {
+            "en": "Data updated at",
+            "fr": "Données mises à jour le"
+          }
+        }
+      ]
+    }
+  ],
+  "scene_actions": [
+    {
+      "key": "read_uv_index",
+      "label": {
+        "en": "Read the UV index",
+        "fr": "Lire l'indice UV"
+      },
+      "description": {
+        "en": "Reads a location's UV index now and hands its values to the next actions of the scene.",
+        "fr": "Lit l'indice UV d'un lieu maintenant et passe ses valeurs aux actions suivantes de la scène."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "location",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Location",
+            "fr": "Lieu"
+          },
+          "description": {
+            "en": "The UV device of the location to read.",
+            "fr": "L'appareil UV du lieu à lire."
+          },
+          "required": true
+        }
+      ],
+      "outputs": [
+        {
+          "key": "location_name",
+          "type": "string",
+          "label": {
+            "en": "Location name",
+            "fr": "Nom du lieu"
+          }
+        },
+        {
+          "key": "uv_index",
+          "type": "number",
+          "label": {
+            "en": "UV index now",
+            "fr": "Indice UV actuel"
+          }
+        },
+        {
+          "key": "uv_index_max_today",
+          "type": "number",
+          "label": {
+            "en": "UV index max today",
+            "fr": "Indice UV max du jour"
+          }
+        },
+        {
+          "key": "uv_index_clear_sky",
+          "type": "number",
+          "label": {
+            "en": "UV index (clear sky)",
+            "fr": "Indice UV (ciel clair)"
+          }
+        },
+        {
+          "key": "level",
+          "type": "number",
+          "label": {
+            "en": "Exposure level (0-5)",
+            "fr": "Niveau d'exposition (0-5)"
+          }
+        },
+        {
+          "key": "level_label",
+          "type": "string",
+          "label": {
+            "en": "Exposure level (text)",
+            "fr": "Niveau d'exposition (texte)"
+          }
+        },
+        {
+          "key": "level_max_today",
+          "type": "number",
+          "label": {
+            "en": "Exposure level of the peak (0-5)",
+            "fr": "Niveau d'exposition du pic (0-5)"
+          }
+        },
+        {
+          "key": "level_max_today_label",
+          "type": "string",
+          "label": {
+            "en": "Exposure level of the peak (text)",
+            "fr": "Niveau d'exposition du pic (texte)"
+          }
+        },
+        {
+          "key": "advice",
+          "type": "string",
+          "label": {
+            "en": "Sun protection advice",
+            "fr": "Conseil de protection solaire"
+          }
+        },
+        {
+          "key": "peak_time",
+          "type": "string",
+          "label": {
+            "en": "Hour of today's peak",
+            "fr": "Heure du pic du jour"
+          }
+        },
+        {
+          "key": "measured_at",
+          "type": "string",
+          "label": {
+            "en": "Data updated at",
+            "fr": "Données mises à jour le"
+          }
         }
       ]
     }

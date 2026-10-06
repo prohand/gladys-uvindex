@@ -10,12 +10,8 @@
   "docker_image": "ghcr.io/prohand/gladys-uvindex:2.0.0",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/prohand/gladys-uvindex/main/cover.jpg",
-  "categories": [
-    "environment"
-  ],
-  "transports": [
-    "cloud"
-  ],
+  "categories": ["environment"],
+  "transports": ["cloud"],
   "location": true,
   "config_schema": [
     {

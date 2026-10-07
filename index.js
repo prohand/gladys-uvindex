@@ -37,6 +37,7 @@ import { createLocationEditor } from './src/locationEditor.js';
 import { createSceneActions } from './src/scenes.js';
 import { readUvIndex } from './src/uv/index.js';
 import { createWidgets } from './src/widgets.js';
+import { withPullDeadline } from './src/widgetDeadline.js';
 
 const gladys = new GladysIntegration();
 
@@ -214,7 +215,9 @@ const widgets = createWidgets({
   readUvIndex,
 });
 for (const [widgetKey, handler] of Object.entries(widgets)) {
-  gladys.onWidgetGet(widgetKey, (request) => handler(request));
+  // Raced against a deadline: a cold Open-Meteo read must give a loading card,
+  // never miss the core's 15 s and leave the card dead (src/widgetDeadline.js).
+  gladys.onWidgetGet(widgetKey, (request) => withPullDeadline(() => handler(request)));
 }
 
 // --- Scene actions (manifest `scene_actions`) --------------------------------

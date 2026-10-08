@@ -78,6 +78,14 @@ A postal code is French by definition, so **outside France** you add a location
 by its latitude and longitude instead; the UV data itself is worldwide. The add
 form has both fields for exactly that.
 
+**Gentle on both.** Every location is read in ONE Open-Meteo request (the API
+takes several comma-separated points), each point's answer is cached until the
+next full hour — the resolution of the forecast — and requests already in flight
+are shared. A network error, a 5xx or a 429 is retried briefly with a jittered
+backoff (honouring `Retry-After`); when Open-Meteo stays down, the widgets and
+the scene action fall back on the last value read, up to 3 hours old and dated,
+while the devices are never handed an old value as a new state.
+
 ## The UV index scale
 
 The **Global Solar UV Index** is defined by the WHO, WMO, UNEP and ICNIRP. It is
@@ -104,6 +112,10 @@ claims the WHO named it. See [`src/uv/scale.js`](./src/uv/scale.js).
 .
 ├─ index.js                          # SDK bootstrap + event wiring (no UV logic)
 ├─ src/
+│  ├─ runtime.js                     # configuration, publication, refresh timers
+│  ├─ status.js                      # the Supervision status, sent on change only
+│  ├─ http.js                        # fetch with short retries (network, 5xx, 429)
+│  ├─ errors.js                      # an error reason, on one line
 │  ├─ config.js                      # config defaults + normalization
 │  ├─ communes.js                    # postal code -> commune (geo.api.gouv.fr)
 │  ├─ houses.js                      # the user's Gladys houses (GET /house)
@@ -113,15 +125,17 @@ claims the WHO named it. See [`src/uv/scale.js`](./src/uv/scale.js).
 │  ├─ language.js                    # the language the DEVICE NAMES are written in
 │  ├─ richText.js                    # the only emphasis the config screen renders
 │  ├─ widgets.js                     # dashboard widget contents (Gladys 5.1+)
+│  ├─ widgetDeadline.js              # a widget pull answers before the core gives up
 │  ├─ scenes.js                      # scene trigger + scene action (Gladys 5.1+)
 │  ├─ uv/
-│  │  ├─ index.js                    #   provider registry + readUvIndex
-│  │  ├─ openMeteo.js                #   the CAMS provider
+│  │  ├─ index.js                    #   provider registry + readUvIndex(es)
+│  │  ├─ openMeteo.js                #   the CAMS provider, its hourly cache
 │  │  ├─ measuredAt.js               #   the data timestamp, kept as text
 │  │  └─ scale.js                    #   UV index -> level, wording, advice
 │  └─ devices/
 │     ├─ index.js                    #   device registry
-│     └─ uvStation.js                #   one device per location
+│     ├─ uvStation.js                #   one device per location
+│     └─ providerTest.js             #   the "Test the UV provider" button
 ├─ docs/{en,fr}.md                   # user documentation, re-hosted by Gladys
 ├─ gladys-assistant-integration.json # manifest (name, config schema, actions, image)
 ├─ Dockerfile                        # Node 24 Alpine, read-only rootfs ready

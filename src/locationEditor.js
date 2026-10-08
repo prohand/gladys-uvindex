@@ -26,6 +26,13 @@
 // screen. So every expected outcome — an unreadable postal code, an ambiguous
 // one, a duplicate — is RETURNED as `{ en, fr }`; only the unexpected throws.
 //
+// ONE CHANGE AT A TIME. The three actions that change the list read it, wait
+// for the network (a postal code lookup, the houses, the device list), then
+// write it. Two clicks close together would both start from the same list, and
+// the second write would erase the first location. So they run one after the
+// other, through a promise queue, and each reads the list again right before
+// writing it.
+//
 // Everything the outside world provides is injected (`getConfig`, `setConfig`,
 // `resolvePostalCode`, `listHouses`), so the whole set is testable without a
 // Gladys server nor a network: see `test/locationEditor.test.js`.
@@ -40,6 +47,7 @@ import {
   resolvePostalCode as lookUpPostalCode,
 } from './communes.js';
 import { formatPoint, toCoordinate } from './coordinates.js';
+import { errorReason } from './errors.js';
 import { HOUSE_ACCESS_DENIED } from './houses.js';
 import {
   describeLocation,
@@ -69,6 +77,24 @@ const NO_LOCATION_YET = {
   fr: "Aucun lieu pour l'instant. Ajoutez-en un avec « Ajouter un lieu ».",
 };
 
+/** Shown when the list is full. */
+const LIST_FULL = {
+  en: `Maximum ${MAX_LOCATIONS} locations. Delete one first.`,
+  fr: `Maximum ${MAX_LOCATIONS} lieux. Supprimez-en un d'abord.`,
+};
+
+/** The actions that change the list, and therefore run one at a time. */
+const WRITING_ACTIONS = ['add_location', 'import_houses', 'remove_location'];
+
+/**
+ * A message with the publication warning `commit` may return appended to it.
+ * @param {{ en: string, fr: string }} message
+ * @param {{ en: string, fr: string }|null} warning
+ */
+function withWarning(message, warning) {
+  return warning ? { en: `${message.en}${warning.en}`, fr: `${message.fr}${warning.fr}` } : message;
+}
+
 /**
  * Build the location manager.
  * @param {object} deps
@@ -95,11 +121,42 @@ export function createLocationEditor({
 }) {
   /**
    * Persist a new list, then re-publish the devices on it.
+   *
+   * The two steps fail differently. A failed WRITE throws: nothing changed, and
+   * the action fails as a whole. A failed PUBLICATION does not undo the write —
+   * the location IS saved, and saying "failed" would make the user add it a
+   * second time — so it comes back as a sentence the action appends to its
+   * answer, with the reason Gladys gave.
    * @param {Array<object>} locations the new list
+   * @returns {Promise<{ en: string, fr: string }|null>} the publication
+   *   warning, or null when the devices were published
    */
   async function commit(locations) {
     await setConfig({ [LOCATIONS_KEY]: serializeLocations(locations) });
-    await onLocationsChanged();
+    try {
+      await onLocationsChanged();
+      return null;
+    } catch (err) {
+      logger.error('The location list is saved, but publishing the devices failed', err);
+      const reason = errorReason(err);
+      return {
+        en: ` It is saved, but publishing the devices to Gladys failed: ${reason}. The Discovery tab will be up to date after its next scan or the next restart of the integration.`,
+        fr: ` C'est enregistré, mais la publication des appareils dans Gladys a échoué : ${reason}. L'onglet Découverte sera à jour après sa prochaine recherche ou le prochain redémarrage de l'intégration.`,
+      };
+    }
+  }
+
+  // The queue the writing actions run through (see the header).
+  let queue = Promise.resolve();
+
+  /** Run `handler` after every change already queued, never alongside one. */
+  function oneAtATime(handler) {
+    return (...args) => {
+      const run = queue.then(() => handler(...args));
+      // A failed change must not block the next one.
+      queue = run.catch(() => {});
+      return run;
+    };
   }
 
   /**
@@ -206,7 +263,7 @@ export function createLocationEditor({
     }
   }
 
-  return {
+  const editor = {
     // --- Manifest actions ---------------------------------------------------
     actions: {
       /**
@@ -250,12 +307,9 @@ export function createLocationEditor({
           }
         }
 
-        const { locations } = getConfig();
-        if (locations.length >= MAX_LOCATIONS) {
-          return {
-            en: `Maximum ${MAX_LOCATIONS} locations. Delete one first.`,
-            fr: `Maximum ${MAX_LOCATIONS} lieux. Supprimez-en un d'abord.`,
-          };
+        // Checked before the lookup, so a full list costs no request…
+        if (getConfig().locations.length >= MAX_LOCATIONS) {
+          return LIST_FULL;
         }
 
         const located = typed.point ? null : await locate(postalCode, city);
@@ -263,6 +317,13 @@ export function createLocationEditor({
           return located.problem;
         }
         const point = typed.point ?? located.point;
+
+        // …and everything below works on the list as it is NOW, after the
+        // network: it is the one this action writes.
+        const { locations } = getConfig();
+        if (locations.length >= MAX_LOCATIONS) {
+          return LIST_FULL;
+        }
 
         // The forecast is read on a ~45 km grid: two devices on the same point
         // would report the same numbers under two names.
@@ -288,7 +349,7 @@ export function createLocationEditor({
           : city;
 
         const id = newLocationId(locations);
-        await commit(
+        const warning = await commit(
           upsertLocation(locations, {
             id,
             name,
@@ -302,6 +363,15 @@ export function createLocationEditor({
 
         const saved = findLocationById(getConfig().locations, id);
         const position = positionOf(getConfig().locations, id);
+        if (warning) {
+          return withWarning(
+            {
+              en: `Location ${position} "${name}" added: ${describeLocation(saved)}.`,
+              fr: `Lieu ${position} « ${name} » ajouté : ${describeLocation(saved)}.`,
+            },
+            warning,
+          );
+        }
         return {
           en: `Location ${position} "${name}" added: ${describeLocation(saved)}. Add its device from the Discovery tab; "Show my locations" lists them all.`,
           fr: `Lieu ${position} « ${name} » ajouté : ${describeLocation(saved)}. Ajoutez son appareil depuis l'onglet Découverte ; « Afficher mes lieux » les liste tous.`,
@@ -345,7 +415,7 @@ export function createLocationEditor({
             };
           }
           logger.warn('Could not read the houses configured in Gladys', err);
-          const reason = String(err?.message ?? err).slice(0, 150);
+          const reason = errorReason(err);
           return {
             en: `Could not read the houses configured in Gladys: ${reason}. Add the location with its postal code instead.`,
             fr: `Impossible de lire les maisons configurées dans Gladys : ${reason}. Ajoutez plutôt le lieu avec son code postal.`,
@@ -400,9 +470,7 @@ export function createLocationEditor({
           addedIds.push(id);
         }
 
-        if (addedIds.length > 0) {
-          await commit(updated);
-        }
+        const warning = addedIds.length > 0 ? await commit(updated) : null;
 
         const current = getConfig().locations;
         const lines = addedIds
@@ -445,10 +513,19 @@ export function createLocationEditor({
             fr: `Aucune maison à ajouter : vos ${houses.length} maison(s) Gladys sont déjà surveillées ou ne peuvent pas l'être.${notes.fr}`,
           };
         }
-        return {
-          en: `${addedIds.length} Gladys house(s) added. Add their devices from the Discovery tab:${LOCATION_LINE_SEPARATOR}${lines}${notes.en}`,
-          fr: `${addedIds.length} maison(s) Gladys ajoutée(s). Ajoutez leurs appareils depuis l'onglet Découverte :${LOCATION_LINE_SEPARATOR}${lines}${notes.fr}`,
-        };
+        const where = warning
+          ? { en: '', fr: '' }
+          : {
+              en: '. Add their devices from the Discovery tab',
+              fr: ". Ajoutez leurs appareils depuis l'onglet Découverte",
+            };
+        return withWarning(
+          {
+            en: `${addedIds.length} Gladys house(s) added${where.en}:${LOCATION_LINE_SEPARATOR}${lines}${notes.en}`,
+            fr: `${addedIds.length} maison(s) Gladys ajoutée(s)${where.fr} :${LOCATION_LINE_SEPARATOR}${lines}${notes.fr}`,
+          },
+          warning,
+        );
       },
 
       /**
@@ -505,7 +582,8 @@ export function createLocationEditor({
         // one case an integration cannot clean up, and it must say so precisely
         // rather than leave a sensor that never updates again.
         const created = await createdDeviceOf(location);
-        await commit(removeLocation(locations, location.id));
+        // The list as it is NOW, after that request: it is the one written.
+        const warning = await commit(removeLocation(getConfig().locations, location.id));
 
         // Deleting the third of four locations moves the fourth up a rank, and
         // those numbers are what this very dropdown offers.
@@ -517,6 +595,23 @@ export function createLocationEditor({
               }
             : { en: '', fr: '' };
 
+        if (warning) {
+          // Saved, but the Discovery tab was not told: it cannot be promised
+          // that the location left it.
+          const device = created
+            ? {
+                en: ` Its device "${created.name}" still exists in Gladys: delete it yourself from the integration's Devices tab.`,
+                fr: ` Son appareil « ${created.name} » existe toujours dans Gladys : supprimez-le vous-même depuis l'onglet Appareils de l'intégration.`,
+              }
+            : { en: '', fr: '' };
+          return withWarning(
+            {
+              en: `Location "${location.name}" removed.${device.en}${renumbered.en}`,
+              fr: `Lieu « ${location.name} » supprimé.${device.fr}${renumbered.fr}`,
+            },
+            warning,
+          );
+        }
         if (!created) {
           // Never created: re-publishing the list without it is enough, the
           // Discovery screen stops offering it on the spot.
@@ -534,4 +629,9 @@ export function createLocationEditor({
       },
     },
   };
+
+  for (const key of WRITING_ACTIONS) {
+    editor.actions[key] = oneAtATime(editor.actions[key]);
+  }
+  return editor;
 }

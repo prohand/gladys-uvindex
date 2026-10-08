@@ -4,8 +4,10 @@
 // The core waits 15 s for a widget content. Past that it shows "widget data
 // unavailable", drops the content it had and schedules NO retry: the card stays
 // dead until somebody reloads the dashboard. A pull that has to read the
-// network on a cold cache can get there (one request alone is allowed 15 s), so
-// past PULL_DEADLINE_MS the card says it is loading, with a short ttl, while
+// network on a cold cache can get there — one Open-Meteo request is allowed
+// 10 s (`REQUEST_TIMEOUT_MS`, src/uv/openMeteo.js), and the interactive retry
+// policy (src/http.js) may start a second, short attempt after a fast failure —
+// so past PULL_DEADLINE_MS the card says it is loading, with a short ttl, while
 // the read keeps going and fills the cache the next pull reads.
 //
 // A thrown error is not swallowed: the core turns it into a message the user

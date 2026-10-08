@@ -272,8 +272,10 @@ export function createWidgets({ getConfig, watchedLocations, locationOfDevice, r
           ],
         };
       }
-      // A failure is thrown: the core shows its own "data unavailable" state,
-      // with a retry button and this message under it.
+      // `readUvIndex` is injected by index.js with one quick retry and the
+      // last known value as a fallback (up to 3 h old, its hour on the card).
+      // Past that a failure is thrown: the core shows its own "data
+      // unavailable" state, with a retry button and this message under it.
       return buildLocationContent(location, await readUvIndex(location));
     },
 

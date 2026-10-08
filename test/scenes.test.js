@@ -13,6 +13,7 @@ import {
   createSceneActions,
   DIRECTION,
   observeLevel,
+  retainLevelMemory,
   SCENE_ACTION,
   SCENE_TRIGGER,
 } from '../src/scenes.js';
@@ -45,6 +46,16 @@ test('a reading without a level leaves the baseline alone', () => {
   observeLevel('loc-1', 2);
   assert.equal(observeLevel('loc-1', null), null);
   assert.deepEqual(observeLevel('loc-1', 1), { previous: 2, level: 1 });
+});
+
+test('the baselines of the locations that left the list are forgotten', () => {
+  observeLevel('loc-1', 2);
+  observeLevel('loc-2', 2);
+
+  retainLevelMemory(['loc-2']);
+
+  assert.equal(observeLevel('loc-1', 4), null, 'a new baseline, not a transition');
+  assert.deepEqual(observeLevel('loc-2', 4), { previous: 2, level: 4 });
 });
 
 test('each location has its own baseline', () => {

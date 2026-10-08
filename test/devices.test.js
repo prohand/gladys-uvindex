@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, test } from 'node:test';
+import { afterEach, beforeEach, mock, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEVICE_FEATURE_CATEGORIES,
@@ -16,7 +16,9 @@ import {
   uvStation,
   watchedLocations,
 } from '../src/devices/uvStation.js';
+import { setRetrySleep } from '../src/http.js';
 import { clearLevelMemory, SCENE_TRIGGER } from '../src/scenes.js';
+import { forgetStatus, holdStatus } from '../src/status.js';
 import { clearUvCache } from '../src/uv/openMeteo.js';
 import { WIDGET } from '../src/widgets.js';
 import { UV_INDEX_MAX, UV_LEVEL_MAX, UV_LEVELS } from '../src/uv/scale.js';
@@ -40,11 +42,18 @@ function stubFetch(payload) {
 beforeEach(() => {
   clearUvCache();
   clearLevelMemory();
+  // The retries are exercised, not waited for.
+  setRetrySleep(async () => {});
 });
 
 afterEach(() => {
   globalThis.fetch = realFetch;
+  setRetrySleep(null);
+  mock.restoreAll();
+  mock.timers.reset();
 });
+
+const BUREAU = { ...NANTES, id: 'loc-2', name: 'Bureau', latitude: '48.86', longitude: '2.35' };
 
 test('one device is published per configured location', () => {
   const gladys = createFakeGladys();
@@ -366,11 +375,13 @@ test('a refresh cycle NEVER throws, and reports the outage instead', async () =>
 });
 
 test('one location failing does not silence the others', async () => {
-  let call = 0;
-  globalThis.fetch = async () => {
-    call += 1;
-    if (call === 1) {
-      throw new Error('boom');
+  // The batch is refused, so each point is asked alone — and only Nantes fails.
+  const requests = [];
+  globalThis.fetch = async (url) => {
+    requests.push(String(url));
+    const latitude = new URL(String(url)).searchParams.get('latitude');
+    if (latitude.includes(',') || latitude === '47.2172') {
+      return { ok: false, status: 400, json: async () => ({}) };
     }
     return {
       ok: true,
@@ -379,17 +390,84 @@ test('one location failing does not silence the others', async () => {
     };
   };
   const gladys = createFakeGladys();
-  const config = normalizeConfig({
-    locations: [
-      NANTES,
-      { ...NANTES, id: 'loc-2', name: 'Bureau', latitude: '48.86', longitude: '2.35' },
-    ],
-  });
+  const config = normalizeConfig({ locations: [NANTES, BUREAU] });
 
   await uvStation.refresh(gladys, config);
 
-  assert.ok(gladys.published.length > 0, 'the location that worked still published');
+  assert.ok(
+    gladys.published.some((state) => state.featureExternalId.startsWith('uv-station:loc-2')),
+    'the location that worked still published',
+  );
+  assert.ok(!gladys.published.some((state) => state.featureExternalId.includes(NANTES.id)));
   assert.equal(gladys.statuses[0].connected, false);
+  assert.match(gladys.statuses[0].message.fr, /Maison/);
+});
+
+test('a state Gladys refuses for one location does not cost the others theirs', async () => {
+  stubFetch([
+    { current: { uv_index: 5 }, hourly: { uv_index: [5] } },
+    { location_id: 1, current: { uv_index: 7 }, hourly: { uv_index: [7] } },
+  ]);
+  const gladys = createFakeGladys();
+  const publishStates = gladys.publishStates;
+  gladys.publishStates = async (states) => {
+    if (states[0].device_feature_external_id.includes(NANTES.id)) {
+      throw new Error('429 TOO_MANY_REQUESTS');
+    }
+    return publishStates(states);
+  };
+
+  await uvStation.refresh(gladys, normalizeConfig({ locations: [NANTES, BUREAU] }));
+
+  assert.ok(gladys.published.some((state) => state.state === 7));
+  assert.match(gladys.statuses[0].message.en, /Maison: UV refresh failed: 429/);
+});
+
+test('a refresh cycle reads every location in ONE request', async () => {
+  const requests = [];
+  globalThis.fetch = async (url) => {
+    requests.push(String(url));
+    return {
+      ok: true,
+      status: 200,
+      json: async () => [
+        { current: { uv_index: 2 }, hourly: { uv_index: [2] } },
+        { location_id: 1, current: { uv_index: 8 }, hourly: { uv_index: [8] } },
+      ],
+    };
+  };
+  const gladys = createFakeGladys();
+
+  await uvStation.refresh(gladys, normalizeConfig({ locations: [NANTES, BUREAU] }));
+
+  assert.equal(requests.length, 1);
+  const uvIndexOf = (id) =>
+    gladys.published.find((state) => state.featureExternalId === `uv-station:${id}:uv-index`)
+      ?.state;
+  assert.equal(uvIndexOf(NANTES.id), 2);
+  assert.equal(uvIndexOf(BUREAU.id), 8);
+});
+
+test('a brief outage of the API is retried within the cycle', async () => {
+  let call = 0;
+  globalThis.fetch = async () => {
+    call += 1;
+    if (call === 1) {
+      throw new TypeError('fetch failed');
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ current: { uv_index: 5 }, hourly: { uv_index: [5] } }),
+    };
+  };
+  const gladys = createFakeGladys();
+
+  await uvStation.refresh(gladys, normalizeConfig({ locations: [NANTES] }));
+
+  assert.equal(call, 2);
+  assert.ok(gladys.published.length > 0, 'the cycle was not lost');
+  assert.deepEqual(gladys.statuses, [{ connected: true, message: undefined }]);
 });
 
 test('a successful cycle reports the integration as connected', async () => {
@@ -401,8 +479,72 @@ test('a successful cycle reports the integration as connected', async () => {
   assert.deepEqual(gladys.statuses, [{ connected: true, message: undefined }]);
 });
 
+test('the same status is not sent again at every cycle', async () => {
+  stubFetch({ current: { uv_index: 5 }, hourly: { uv_index: [5] } });
+  const gladys = createFakeGladys();
+  const config = normalizeConfig({ locations: [NANTES] });
+
+  await uvStation.refresh(gladys, config);
+  await uvStation.refresh(gladys, config);
+  assert.equal(gladys.statuses.length, 1, 'nothing changed, nothing sent');
+
+  // A (re)connection forgets it: Gladys may have restarted meanwhile.
+  forgetStatus(gladys);
+  await uvStation.refresh(gladys, config);
+  assert.equal(gladys.statuses.length, 2);
+});
+
+test('a status that changes is sent', async () => {
+  const gladys = createFakeGladys();
+  const config = normalizeConfig({ locations: [NANTES] });
+
+  stubFetch({ current: { uv_index: 5 }, hourly: { uv_index: [5] } });
+  await uvStation.refresh(gladys, config);
+  clearUvCache();
+  globalThis.fetch = async () => {
+    throw new Error('network down');
+  };
+  await uvStation.refresh(gladys, config);
+
+  assert.deepEqual(
+    gladys.statuses.map((status) => status.connected),
+    [true, false],
+  );
+});
+
+test('a refused device batch is not hidden by a good cycle', async () => {
+  stubFetch({ current: { uv_index: 5 }, hourly: { uv_index: [5] } });
+  const gladys = createFakeGladys();
+  const refused = { en: 'Gladys refused the device: bad', fr: "Gladys a refusé l'appareil : bad" };
+  holdStatus(gladys, refused);
+
+  await uvStation.refresh(gladys, normalizeConfig({ locations: [NANTES] }));
+
+  assert.deepEqual(gladys.statuses, [{ connected: false, message: refused }]);
+});
+
+test('the refresh timer follows the configured interval, with no floor of its own', async () => {
+  // normalizeConfig keeps it within the manifest bounds (10 min to 6 h): that
+  // is the only floor there is.
+  mock.timers.enable({ apis: ['setInterval'] });
+  const refresh = mock.method(uvStation, 'refresh', async () => {});
+  const config = normalizeConfig({ poll_frequency: 600, locations: [NANTES] });
+
+  const stop = uvStation.startPolling(createFakeGladys(), config);
+  assert.equal(refresh.mock.callCount(), 1, 'refreshed straight away');
+  mock.timers.tick(600_000);
+  assert.equal(refresh.mock.callCount(), 2);
+  stop();
+  mock.timers.tick(600_000);
+  assert.equal(refresh.mock.callCount(), 2, 'stopped');
+});
+
 test('the provider test reports every location, numbered like the listing', async () => {
-  stubFetch({ current: { uv_index: 7.2 }, hourly: { uv_index: [7.8] } });
+  // Two points, one request: the API answers one block per point.
+  stubFetch([
+    { current: { uv_index: 7.2 }, hourly: { uv_index: [7.8] } },
+    { location_id: 1, current: { uv_index: 7.2 }, hourly: { uv_index: [7.8] } },
+  ]);
   const gladys = createFakeGladys();
   const config = normalizeConfig({
     locations: [
@@ -445,6 +587,32 @@ test('the provider test says how many locations failed, and why', async () => {
 
   assert.match(message.fr, /1 lieu\(x\) en échec sur 1/);
   assert.match(message.fr, /boom/);
+});
+
+test('the provider test says "no data" when the source has none, never "None"', async () => {
+  // Level 0 is "the sun is down"; a missing value is not.
+  stubFetch({ current: { uv_index: null }, hourly: { uv_index: [] } });
+  const config = normalizeConfig({ locations: [NANTES] });
+
+  const message = await uvStation.actions.test_provider(createFakeGladys(), { config });
+
+  assert.match(message.fr, /UV — \(pas de donnée\)/);
+  assert.match(message.en, /UV — \(no data\)/);
+  assert.doesNotMatch(message.fr, /Nul/);
+});
+
+test('the provider test never serves a stale value', async () => {
+  stubFetch({ current: { uv_index: 5 }, hourly: { uv_index: [5] } });
+  const config = normalizeConfig({ locations: [NANTES] });
+  await uvStation.refresh(createFakeGladys(), config);
+
+  mock.timers.enable({ apis: ['Date'], now: Date.now() + 60 * 60 * 1000 });
+  globalThis.fetch = async () => {
+    throw new Error('network down');
+  };
+  const message = await uvStation.actions.test_provider(createFakeGladys(), { config });
+
+  assert.match(message.fr, /1 lieu\(x\) en échec sur 1/);
 });
 
 test('the provider test with no location says what to do', async () => {

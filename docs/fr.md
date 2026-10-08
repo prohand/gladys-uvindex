@@ -126,6 +126,13 @@ justement l'intérêt — il dit l'âge des chiffres, pas la fréquence des appe
 Quand un rafraîchissement échoue, rien n'est publié du tout : l'horodatage
 cesse d'avancer et l'ancienneté devient visible sur le tableau de bord.
 
+Une coupure brève de la source ne coûte pas un rafraîchissement entier :
+l'intégration réessaie aussitôt, deux fois, à quelques secondes d'intervalle.
+Si la source reste injoignable, les **widgets** et l'action de scène « Lire
+l'indice UV » affichent la dernière valeur connue — au plus 3 heures — avec son
+propre horodatage, qui dit honnêtement de quand elle date ; les appareils, eux,
+ne reçoivent jamais une valeur ancienne présentée comme nouvelle.
+
 « Tester le fournisseur UV » termine chaque ligne par ce même horodatage : une
 source qui répond avec l'heure d'hier se voit immédiatement.
 
@@ -202,14 +209,18 @@ votre maison, puis un message « Pic UV {{0.1.uv_index_max_today}}
   suivent aussi ce réglage.
 - **Intervalle de rafraîchissement** — 30 minutes par défaut, entre 10 minutes et
   6 heures. La prévision CAMS est horaire : descendre nettement sous la
-  demi-heure n'apporte rien de plus.
+  demi-heure n'apporte rien de plus. Tous les lieux sont lus en une seule
+  requête, et une même valeur n'est demandée qu'une fois par heure, quel que soit
+  le nombre de rafraîchissements et de widgets.
 
 ## Vérifier que tout fonctionne
 
 Le bouton **« Tester le fournisseur UV »** interroge la source en direct pour
 chaque lieu et affiche l'indice obtenu, au même format numéroté que la liste des
 lieux. Si un lieu échoue, sa ligne dit pourquoi et les autres répondent quand
-même.
+même. Un lieu pour lequel la source n'a aucune valeur affiche « pas de donnée »,
+jamais un niveau. Contrairement aux widgets, ce bouton n'affiche jamais une
+valeur ancienne : une source en panne apparaît en panne.
 
 L'écran de supervision affiche également l'état de l'intégration : tant qu'aucun
 lieu n'est configuré, il indique qu'il faut en ajouter un.

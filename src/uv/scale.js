@@ -43,11 +43,14 @@ export const UV_LEVEL_MAX = UV_LEVELS.EXTREME;
 /**
  * Upper bound of the numeric UV index features.
  *
- * The WHO scale is open-ended, but `t_device_feature.max` is not: it needs a
- * number, and a value above it is refused. 16 is comfortably past the highest
- * index ever measured on Earth (43.3 was recorded at 5 900 m in the Andes, but
- * ~14 is the ceiling at sea level in the tropics), so no real reading is ever
- * clipped while the dashboard gauge keeps a usable range.
+ * The WHO scale is open-ended, but `t_device_feature.max` is not: the column is
+ * NOT NULL, so the feature must declare a number. It is a DISPLAY range, not a
+ * validation: the core accepts any finite state (`saveStates` checks nothing
+ * else), and `roundUvIndex` deliberately does not clamp to it — a reading above
+ * 16 is published as it is and only overflows the dashboard gauge, which beats
+ * publishing a false number. 16 sits above what is met in practice: ~14 is the
+ * ceiling at sea level in the tropics, and the 43.3 once measured at 5 900 m in
+ * the Andes is a point record far beyond anything a ~45 km CAMS cell forecasts.
  */
 export const UV_INDEX_MAX = 16;
 

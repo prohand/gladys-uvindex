@@ -51,6 +51,9 @@ const PERONNAS = {
  * @param {object|null} [options.createdDevice] the device a location already has
  * @param {Array<object>} [options.houses] the houses configured in Gladys
  * @param {Error} [options.houseError] what GET /house fails with, if it does
+ * @param {Error} [options.publishError] what re-publishing the devices fails with
+ * @param {boolean} [options.slow] every outside call takes a few ticks, the way
+ *   the network does — what lets two clicks overlap
  */
 function setup({
   communes = [NANTES],
@@ -58,22 +61,35 @@ function setup({
   createdDevice = null,
   houses = [],
   houseError = null,
+  publishError = null,
+  slow = false,
 } = {}) {
   const state = { config: normalizeConfig({ locations }), republished: 0, writes: [] };
+  const later = async () => {
+    for (let tick = 0; slow && tick < 3; tick += 1) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+  };
 
   const editor = createLocationEditor({
     getConfig: () => state.config,
     async setConfig(patch) {
+      await later();
       state.writes.push(patch);
       state.config = normalizeConfig({ ...state.config, ...patch });
     },
     async onLocationsChanged() {
+      await later();
       state.republished += 1;
+      if (publishError) {
+        throw publishError;
+      }
     },
     async findCreatedDevice() {
       return createdDevice;
     },
     async resolvePostalCode(postalCode, city = '') {
+      await later();
       const candidates = communes.filter((commune) => commune.postalCodes.includes(postalCode));
       const wanted = String(city).trim().toLowerCase();
       const named = candidates.filter((commune) => commune.name.toLowerCase() === wanted);
@@ -88,6 +104,7 @@ function setup({
       return { match, candidates };
     },
     async listHouses() {
+      await later();
       if (houseError) {
         throw houseError;
       }
@@ -479,4 +496,135 @@ test('what is written to the configuration is what can be read back', async () =
   const [stored] = patch.locations;
   assert.equal(stored.latitude, '47.2172', 'coordinates are stored as text');
   assert.equal(stored.postal_code, '44300');
+});
+
+// --- One change at a time -----------------------------------------------------
+
+test('two clicks close together both add their location', async () => {
+  // Both read the list, wait for the network, then write it: without the queue
+  // the second write would erase the first location.
+  const { editor, state } = setup({ communes: [NANTES, BOURG], slow: true });
+
+  const [first, second] = await Promise.all([
+    editor.actions.add_location({ postal_code: '44300' }),
+    editor.actions.add_location({ postal_code: '01000' }),
+  ]);
+
+  assert.match(first.fr, /Lieu 1 « Nantes » ajouté/);
+  assert.match(second.fr, /Lieu 2 « Bourg-en-Bresse » ajouté/);
+  assert.deepEqual(
+    state.config.locations.map((location) => location.name),
+    ['Nantes', 'Bourg-en-Bresse'],
+  );
+});
+
+test('a removal clicked during an addition removes only its own location', async () => {
+  const { editor, state } = setup({
+    communes: [NANTES, BOURG],
+    slow: true,
+    locations: [{ id: 'loc-1', name: 'Vieux', latitude: '45', longitude: '4' }],
+  });
+
+  await Promise.all([
+    editor.actions.add_location({ postal_code: '44300' }),
+    editor.actions.remove_location({ location: '1', confirmation: true }),
+  ]);
+
+  assert.deepEqual(
+    state.config.locations.map((location) => location.name),
+    ['Nantes'],
+  );
+});
+
+test('a click that fails does not block the next one', async () => {
+  let config = normalizeConfig();
+  let lookups = 0;
+  const editor = createLocationEditor({
+    getConfig: () => config,
+    async setConfig(patch) {
+      config = normalizeConfig({ ...config, ...patch });
+    },
+    onLocationsChanged: async () => {},
+    async resolvePostalCode() {
+      lookups += 1;
+      if (lookups === 1) {
+        throw new Error('registry down');
+      }
+      return { match: NANTES, candidates: [NANTES] };
+    },
+  });
+
+  const [first, second] = await Promise.allSettled([
+    editor.actions.add_location({ postal_code: '44300' }),
+    editor.actions.add_location({ postal_code: '44300' }),
+  ]);
+
+  assert.equal(first.status, 'rejected');
+  assert.match(first.reason.message, /registry down/);
+  assert.equal(second.status, 'fulfilled');
+  assert.match(second.value.fr, /ajouté/);
+  assert.equal(config.locations.length, 1);
+});
+
+test('a full list is checked again after the lookup', async () => {
+  // Another click may have filled the list while this one waited for the
+  // network: the list written is the one read last.
+  const full = Array.from({ length: MAX_LOCATIONS - 1 }, (_, index) => ({
+    id: `loc-${index}`,
+    name: `Lieu ${index}`,
+    latitude: String(10 + index),
+    longitude: '1',
+  }));
+  const { editor, state } = setup({ communes: [NANTES, BOURG], slow: true, locations: full });
+
+  const [first, second] = await Promise.all([
+    editor.actions.add_location({ postal_code: '44300' }),
+    editor.actions.add_location({ postal_code: '01000' }),
+  ]);
+
+  assert.match(first.fr, /ajouté/);
+  assert.match(second.fr, /Maximum/);
+  assert.equal(state.config.locations.length, MAX_LOCATIONS);
+});
+
+// --- Saved, but not published ------------------------------------------------
+
+test('a location saved but not published says both, with the reason', async () => {
+  const { editor, state } = setup({ publishError: new Error('BAD_REQUEST: unknown category') });
+
+  const message = await editor.actions.add_location({ postal_code: '44300' });
+
+  assert.equal(state.config.locations.length, 1, 'the write is not undone');
+  assert.match(message.fr, /Lieu 1 « Nantes » ajouté/);
+  assert.match(message.fr, /enregistré, mais la publication des appareils dans Gladys a échoué/);
+  assert.match(message.en, /saved, but publishing the devices to Gladys failed/);
+  assert.match(message.en, /unknown category/);
+  assert.doesNotMatch(message.en, /Add its device from the Discovery tab/);
+});
+
+test('a removal saved but not published does not promise the Discovery tab', async () => {
+  const { editor, state } = setup({
+    locations: [{ id: 'loc-1', name: 'Maison', latitude: '45', longitude: '4' }],
+    publishError: new Error('timeout'),
+  });
+
+  const message = await editor.actions.remove_location({ location: '1', confirmation: true });
+
+  assert.equal(state.config.locations.length, 0);
+  assert.match(message.en, /Location "Maison" removed\./);
+  assert.match(message.en, /publishing the devices to Gladys failed: timeout/);
+  assert.doesNotMatch(message.en, /no longer offered/);
+});
+
+test('an import saved but not published says so', async () => {
+  const { editor, state } = setup({
+    houses: [house('Maison', 47.2, -1.55)],
+    publishError: new Error('timeout'),
+  });
+
+  const message = await editor.actions.import_houses();
+
+  assert.equal(state.config.locations.length, 1);
+  assert.match(message.fr, /1 maison\(s\) Gladys ajoutée\(s\) :/);
+  assert.match(message.fr, /la publication des appareils dans Gladys a échoué : timeout/);
 });

@@ -55,13 +55,28 @@ export const DIRECTION = {
 
 // The last level seen per location id. Module-level on purpose, like the
 // provider cache: it outlives a configuration change (a new interval must not
-// reset the baseline), and ids are never reused, so a removed location's entry
-// is dead weight, never a wrong answer.
+// reset the baseline). Ids are never reused, so a removed location's entry is
+// never a wrong answer — it is dropped all the same when the list changes
+// (`retainLevelMemory`), or it would be kept for as long as the container runs.
 const lastLevels = new Map();
 
 /** Forget every baseline (used by the tests). */
 export function clearLevelMemory() {
   lastLevels.clear();
+}
+
+/**
+ * Forget the baselines of the locations that are no longer in the list. The
+ * others are kept: a location still watched must not fire as if just started.
+ * @param {Iterable<string>} locationIds the ids of the current list
+ */
+export function retainLevelMemory(locationIds) {
+  const kept = new Set(locationIds);
+  for (const id of lastLevels.keys()) {
+    if (!kept.has(id)) {
+      lastLevels.delete(id);
+    }
+  }
 }
 
 /**
@@ -168,7 +183,9 @@ export function buildReadingOutputs(location, reading, language) {
  * @param {object} deps
  * @param {() => { language: string }} deps.getConfig
  * @param {(config: object, deviceExternalId: string) => object|undefined} deps.locationOfDevice
- * @param {(location: object) => Promise<object>} deps.readUvIndex
+ * @param {(location: object) => Promise<object>} deps.readUvIndex injected by
+ *   index.js with one quick retry and the last known value as a fallback — a
+ *   reading up to 3 h old, whose `measured_at` says so, beats failing the action
  */
 export function createSceneActions({ getConfig, locationOfDevice, readUvIndex }) {
   return {

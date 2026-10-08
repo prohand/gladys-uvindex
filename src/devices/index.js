@@ -25,8 +25,8 @@ import { uvStation } from './uvStation.js';
 export const DEVICE_BLUEPRINTS = [uvStation];
 
 /** Build the discovery payload: every blueprint, for every watched location. */
-export function buildDiscoveredDevices(gladys, config) {
-  return DEVICE_BLUEPRINTS.flatMap((blueprint) => blueprint.buildDevices(gladys, config));
+export function buildDiscoveredDevices(gladys, config, blueprints = DEVICE_BLUEPRINTS) {
+  return blueprints.flatMap((blueprint) => blueprint.buildDevices(gladys, config));
 }
 
 /**

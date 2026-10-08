@@ -8,8 +8,9 @@
 // file only:
 //   1. instantiates the SDK (connection, auth, reconnection: handled for you);
 //   2. registers the event handlers BEFORE connect();
-//   3. publishes one discovered device per configured location, and refreshes
-//      that list every time the user adds or removes one;
+//   3. routes the lifecycle events to the runtime (src/runtime.js), which owns
+//      the configuration, publishes one discovered device per configured
+//      location and drives the refresh timers;
 //   4. gives the location manager the two things it cannot do itself: write the
 //      configuration, and re-publish the devices when the list changes;
 //   5. serves the dashboard widgets (src/widgets.js) and the scene actions
@@ -24,16 +25,16 @@
 // -----------------------------------------------------------------------------
 
 import { GladysIntegration, logger } from '@gladysassistant/integration-sdk';
-import { isConfigured, normalizeConfig } from './src/config.js';
 import {
-  buildDiscoveredDevices,
   DEVICE_BLUEPRINTS,
   findBlueprintByDevice,
   locationDeviceIds,
 } from './src/devices/index.js';
 import { locationOfDevice, watchedLocations } from './src/devices/uvStation.js';
 import { fetchHouses } from './src/houses.js';
+import { RETRY } from './src/http.js';
 import { createLocationEditor } from './src/locationEditor.js';
+import { createRuntime } from './src/runtime.js';
 import { createSceneActions } from './src/scenes.js';
 import { readUvIndex } from './src/uv/index.js';
 import { createWidgets } from './src/widgets.js';
@@ -41,115 +42,20 @@ import { withPullDeadline } from './src/widgetDeadline.js';
 
 const gladys = new GladysIntegration();
 
-// Current configuration (hot-reloaded via onConfigUpdated, and updated in place
-// by the location actions since a self-initiated setConfig does not come back
-// through the event).
-let config = normalizeConfig();
-
-// Cleanup functions of the refresh timers. The devices declare no
-// `poll_frequency` — the core caps its own polling at one minute, far too fast
-// for an hourly forecast — so the integration drives its own refresh.
-let pollingCleanups = [];
-
-// Shown in the Supervision screen while no location has been added yet.
-const NOT_CONFIGURED_MESSAGE = {
-  en: 'Add a location to start following the UV index.',
-  fr: "Ajoutez un lieu pour suivre l'indice UV.",
-};
-
-/**
- * Publish the discovered devices — unless we do not know WHERE to look yet.
- * @returns {Promise<boolean>} whether there was anything to publish
- */
-async function publishDevices() {
-  const configured = isConfigured(config);
-  if (!configured) {
-    logger.warn('No location configured yet: nothing to discover');
-    await gladys.setConnectionStatus(false, NOT_CONFIGURED_MESSAGE).catch(() => {});
-  }
-  // An EMPTY list is still published, and that matters: publishDiscoveredDevices
-  // REPLACES the previous one, so this is the only way the device of a deleted
-  // location leaves the Discovery screen.
-  const devices = configured ? buildDiscoveredDevices(gladys, config) : [];
-  // Logged in full at debug level: when Gladys refuses the batch, the rejected
-  // payload is the only thing that tells you WHICH feature it choked on.
-  logger.debug('publishDiscoveredDevices ->', JSON.stringify(devices));
-
-  try {
-    const response = await gladys.publishDiscoveredDevices(devices);
-    logger.info(`Published ${response?.count ?? devices.length} device(s) to the Discovery screen`);
-    return configured;
-  } catch (err) {
-    // Gladys refused the batch — an unsupported feature category, an invalid
-    // poll frequency, a feature without min/max... Without this, the Discovery
-    // tab just stays empty with nothing anywhere to say why: the error would
-    // only reach the SDK acknowledgement, which the user never sees.
-    logger.error('Gladys refused the discovered devices', err);
-    const reason = String(err?.message ?? err).slice(0, 150);
-    await gladys
-      .setConnectionStatus(false, {
-        en: `Gladys refused the device: ${reason}`,
-        fr: `Gladys a refusé l'appareil : ${reason}`,
-      })
-      .catch(() => {});
-    throw err;
-  }
-}
-
-/** (Re)start the refresh timers of every blueprint that has one. */
-function startPolling() {
-  stopPolling();
-  pollingCleanups = DEVICE_BLUEPRINTS.filter(
-    (blueprint) => typeof blueprint.startPolling === 'function',
-  ).map((blueprint) => blueprint.startPolling(gladys, config));
-}
-
-function stopPolling() {
-  for (const cleanup of pollingCleanups) {
-    try {
-      cleanup?.();
-    } catch (err) {
-      logger.error('Refresh timer cleanup failed', err);
-    }
-  }
-  pollingCleanups = [];
-}
-
-/** Run one refresh cycle right now. Never throws (see blueprint.refresh). */
-async function refreshNow() {
-  await Promise.all(
-    DEVICE_BLUEPRINTS.filter((blueprint) => typeof blueprint.refresh === 'function').map(
-      (blueprint) => blueprint.refresh(gladys, config),
-    ),
-  );
-}
-
-/**
- * Re-publish the devices and restart the refresh on the current list. Called by
- * the location manager after every change it makes.
- */
-async function republish() {
-  if (await publishDevices()) {
-    startPolling();
-  } else {
-    stopPolling();
-  }
-}
+// The configuration, the published devices and the refresh timers
+// (src/runtime.js): everything below only routes the SDK events to it.
+const runtime = createRuntime(gladys);
 
 // The location manager owns everything the user does with the configured
-// locations: the three actions that add, list and delete them. It is given the
+// locations: the actions that add, import, list and delete them. It is given the
 // capabilities it cannot have on its own — writing the configuration,
 // re-publishing the devices — and nothing else, which is what makes it testable
 // offline.
 const locationEditor = createLocationEditor({
-  getConfig: () => config,
-  async setConfig(patch) {
-    await gladys.setConfig(patch);
-    // Keep the in-memory copy in step: the core does NOT echo an integration's
-    // own write back as a config-updated (it would loop), so nothing else will.
-    config = normalizeConfig({ ...config, ...patch });
-  },
-  onLocationsChanged: republish,
+  getConfig: runtime.getConfig,
+  // The only place a self-initiated write updates the in-memory configuration.
+  setConfig: runtime.setConfig,
+  onLocationsChanged: runtime.republish,
   listHouses: () => fetchHouses(gladys),
   // "Has the user already created this location's device?" — the one case the
   // delete action cannot clean up on its own, and must therefore name.
@@ -162,8 +68,8 @@ const locationEditor = createLocationEditor({
 
 // --- Discovery: Gladys asks for the list of devices --------------------------
 gladys.onScanRequest(async () => {
-  logger.info(`onScanRequest -> publishing ${config.locations.length} location(s)`);
-  await publishDevices();
+  logger.info(`onScanRequest -> publishing ${runtime.getConfig().locations.length} location(s)`);
+  await runtime.publishDevices();
 });
 
 // --- The user just added a device from the Discovery screen ------------------
@@ -173,11 +79,12 @@ gladys.onScanRequest(async () => {
 // when it is broken.
 gladys.onDeviceCreated(async (device) => {
   logger.info(`onDeviceCreated -> ${device.external_id}, refreshing right away`);
-  await refreshNow();
+  await runtime.refreshNow();
 });
 
 // --- Polling: Gladys asks to refresh one device ------------------------------
 gladys.onPoll(async (device) => {
+  const config = runtime.getConfig();
   const blueprint = findBlueprintByDevice(gladys, config, device);
   if (!blueprint || typeof blueprint.onPoll !== 'function') {
     // The device exists in Gladys but no location watches it: the user removed
@@ -196,12 +103,20 @@ gladys.onPoll(async (device) => {
 // key; the message resolved by the handler is displayed under the button.
 for (const blueprint of DEVICE_BLUEPRINTS) {
   for (const [actionKey, handler] of Object.entries(blueprint.actions ?? {})) {
-    gladys.onAction(actionKey, (fields) => handler(gladys, { fields, config }));
+    gladys.onAction(actionKey, (fields) =>
+      handler(gladys, { fields, config: runtime.getConfig() }),
+    );
   }
 }
 for (const [actionKey, handler] of Object.entries(locationEditor.actions)) {
   gladys.onAction(actionKey, (fields) => handler(fields));
 }
+
+// The read the dashboard and the scenes make: somebody is waiting, so one quick
+// retry at most, and the last known value (up to 3 h old, its hour shown) rather
+// than an error when the source is down — see src/uv/index.js.
+const readForDisplay = (location) =>
+  readUvIndex(location, { retry: RETRY.INTERACTIVE, allowStale: true });
 
 // --- Dashboard widgets (manifest `widgets`) -----------------------------------
 // The core pulls a widget's content when a dashboard shows it, and again on its
@@ -209,10 +124,10 @@ for (const [actionKey, handler] of Object.entries(locationEditor.actions)) {
 // arrives as the device's external_id, which `locationOfDevice` maps back to its
 // location.
 const widgets = createWidgets({
-  getConfig: () => config,
+  getConfig: runtime.getConfig,
   watchedLocations,
   locationOfDevice: (current, externalId) => locationOfDevice(gladys, current, externalId),
-  readUvIndex,
+  readUvIndex: readForDisplay,
 });
 for (const [widgetKey, handler] of Object.entries(widgets)) {
   // Raced against a deadline: a cold Open-Meteo read must give a loading card,
@@ -224,9 +139,9 @@ for (const [widgetKey, handler] of Object.entries(widgets)) {
 // A scene reached one of our cards: `fields` arrive resolved and validated by
 // the core, and the resolved object becomes the action's outputs.
 const sceneActions = createSceneActions({
-  getConfig: () => config,
+  getConfig: runtime.getConfig,
   locationOfDevice: (current, externalId) => locationOfDevice(gladys, current, externalId),
-  readUvIndex,
+  readUvIndex: readForDisplay,
 });
 for (const [actionKey, handler] of Object.entries(sceneActions)) {
   gladys.onSceneAction(actionKey, (fields) => handler(fields));
@@ -235,62 +150,35 @@ for (const [actionKey, handler] of Object.entries(sceneActions)) {
 // --- Configuration updated by the user ---------------------------------------
 gladys.onConfigUpdated(async (newConfig) => {
   logger.info('onConfigUpdated -> new configuration received');
-  config = normalizeConfig(newConfig);
-  // Nothing in that screen touches a location — it only holds the refresh
-  // interval and the language, which `republish` applies by re-publishing the
-  // devices and restarting the timers.
-  await republish();
+  // The new interval and language reach the timers even when the publication
+  // fails (src/runtime.js).
+  await runtime.applyConfig(newConfig);
 });
 
 // --- Connection lifecycle ----------------------------------------------------
-// The SDK logs the WebSocket lifecycle itself (under the `gladys-sdk` name).
-gladys.on('connected', async () => {
-  try {
-    // 1) Fetch the configuration filled in by the user.
-    config = normalizeConfig(await gladys.getConfig());
-
-    // 2) (Re)publish the devices as soon as we are connected.
-    if (!(await publishDevices())) {
-      stopPolling();
-      return;
-    }
-
-    // 3) Start our own refresh loop (the devices declare no poll_frequency).
-    startPolling();
-
-    // 4) Report the application-level status, shown in the Supervision screen.
-    // Distinct from the container state machine: an integration can be RUNNING
-    // and still unable to reach its third-party service.
-    await gladys.setConnectionStatus(true);
-  } catch (err) {
-    logger.error('Post-connection initialization failed', err);
-    // Carry the real reason into the Supervision screen. A rejected device batch
-    // is otherwise invisible: the user just sees an empty Discovery tab with no
-    // clue that Gladys refused the payload.
-    const reason = String(err?.message ?? err).slice(0, 150);
-    await gladys
-      .setConnectionStatus(false, {
-        en: `Initialization failed: ${reason}`,
-        fr: `L'initialisation a échoué : ${reason}`,
-      })
-      .catch(() => {});
-  }
-});
+// The SDK logs the WebSocket lifecycle itself (under the `gladys-sdk` name), and
+// emits 'connected' after every (re)connection, once it has re-read the devices
+// and the configuration.
+gladys.on('connected', () => runtime.onConnected());
 
 // --- Graceful shutdown -------------------------------------------------------
 gladys.on('disconnected', () => {
   // No point hammering Open-Meteo while we cannot publish anything.
-  stopPolling();
+  runtime.stopPolling();
 });
 
 gladys.handleShutdown((signal) => {
   logger.info(`Received ${signal} -> graceful shutdown`);
-  stopPolling();
+  runtime.stopPolling();
 });
 
 // --- Startup -----------------------------------------------------------------
 logger.info('Starting the UV index integration...');
 gladys.connect().catch((err) => {
-  logger.error('Initial connection failed', err);
-  process.exit(1);
+  // connect() rejects when Gladys refuses the token on the FIRST attempt (close
+  // code 4000), but the SDK keeps its reconnection loop armed for life after
+  // it: the refusal can be transient (Gladys still booting), and the next
+  // attempt can succeed. Exiting here would throw that loop away, so the
+  // failure is logged and the process stays up.
+  logger.error('Initial connection to Gladys failed, the SDK keeps retrying', err);
 });

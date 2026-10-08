@@ -31,28 +31,20 @@ import {
   DEVICE_FEATURE_TYPES,
   DEVICE_FEATURE_UNITS,
 } from '@gladysassistant/integration-sdk';
+import { RETRY } from '../http.js';
 import { DEFAULT_LANGUAGE, inLanguage } from '../language.js';
 import { announceLevelChange } from '../scenes.js';
-import { findProvider, readUvIndex } from '../uv/index.js';
+import { reportStatus } from '../status.js';
+import { findProvider, readUvIndex, readUvIndexes } from '../uv/index.js';
 import { formatMeasuredAt } from '../uv/measuredAt.js';
 import { UV_INDEX_MAX, UV_LEVEL_ADVICE, UV_LEVEL_LABELS, UV_LEVEL_MAX } from '../uv/scale.js';
-import {
-  describeLocation,
-  LOCATION_LINE_SEPARATOR,
-  locationLine,
-  positionOf,
-  usableLocations,
-} from '../locations.js';
+import { describeLocation, usableLocations } from '../locations.js';
 import { nudgeWidgets } from '../widgets.js';
+import { failureDetail, testProvider } from './providerTest.js';
 
 export const DEVICE_TYPE = 'uv-station';
 
 const logger = createLogger({ name: DEVICE_TYPE });
-
-// Floor on the refresh interval, whatever the configuration says. Open-Meteo is
-// a free public service and the CAMS forecast is hourly: hammering it buys
-// nothing.
-export const MIN_REFRESH_SECONDS = 300;
 
 /** Feature keys, kept in one place so discovery and polling always agree. */
 export const FEATURE = {
@@ -289,21 +281,15 @@ export function buildStates(ids, reading, language = DEFAULT_LANGUAGE) {
 }
 
 /**
- * Read one location and publish its states.
- * Throws on an unreadable answer — `refresh` is what never throws.
+ * Publish the states of one location from a fresh reading, then fire the scene
+ * trigger if its level crossed a band.
  * @param {import('@gladysassistant/integration-sdk').GladysIntegration} gladys
  * @param {import('../locations.js').Location} location
+ * @param {object} reading what `readUvIndex` resolved
  * @param {string} [language] language of the published TEXT states
  */
-export async function poll(gladys, location, language = DEFAULT_LANGUAGE) {
+export async function publishReading(gladys, location, reading, language = DEFAULT_LANGUAGE) {
   const ids = deviceExternalIds(gladys, location);
-  logger.info(`Polling UV index for ${location.name}...`);
-
-  // ------------------------------------------------------------------ //
-  // DO THE WORK: read the UV index and grade it.
-  // ------------------------------------------------------------------ //
-  const reading = await readUvIndex(location);
-
   const states = buildStates(ids, reading, language);
   if (states.length === 0) {
     logger.warn(`No UV data for ${location.name}, nothing published`);
@@ -326,13 +312,18 @@ export async function poll(gladys, location, language = DEFAULT_LANGUAGE) {
   return reading;
 }
 
-/** Why a location could not be read, WITHOUT naming it (the line already does). */
-function failureDetail(err) {
-  const reason = String(err?.message ?? err).slice(0, 120);
-  return {
-    en: `UV refresh failed: ${reason}`,
-    fr: `le rafraîchissement de l'indice UV a échoué : ${reason}`,
-  };
+/**
+ * Read one location and publish its states — the answer to a poll request,
+ * which Gladys acknowledges within seconds: one quick retry at most.
+ * Throws on an unreadable answer — `refresh` is what never throws.
+ * @param {import('@gladysassistant/integration-sdk').GladysIntegration} gladys
+ * @param {import('../locations.js').Location} location
+ * @param {string} [language] language of the published TEXT states
+ */
+export async function poll(gladys, location, language = DEFAULT_LANGUAGE) {
+  logger.info(`Polling UV index for ${location.name}...`);
+  const reading = await readUvIndex(location, { retry: RETRY.INTERACTIVE });
+  return publishReading(gladys, location, reading, language);
 }
 
 /** The same reason, named, for the one-line connection status. */
@@ -342,47 +333,6 @@ function failureMessage(err, locationName) {
     en: `${locationName}: ${detail.en}`,
     fr: `${locationName} : ${detail.fr}`,
   };
-}
-
-const NO_LOCATION_MESSAGE = {
-  en: 'No location with usable coordinates yet. Add one with "Add a location".',
-  fr: 'Aucun lieu avec des coordonnées utilisables. Ajoutez-en un avec « Ajouter un lieu ».',
-};
-
-/**
- * A header plus one line per location, in both languages — EXACTLY the format of
- * the location listing (`• n. name — detail`, built by the same `locationLine`),
- * because both actions answer about the same list under the same numbers.
- */
-function report(header, lines) {
-  const join = (language) =>
-    lines
-      .map((line) => locationLine(line.position, line.name, line[language]))
-      .join(LOCATION_LINE_SEPARATOR);
-  return {
-    en: `${header.en}${LOCATION_LINE_SEPARATOR}${join('en')}`,
-    fr: `${header.fr}${LOCATION_LINE_SEPARATOR}${join('fr')}`,
-  };
-}
-
-/**
- * Run `read` on every location, turning a failure into a LINE rather than into a
- * rejection: one location the provider refuses must not hide the answer of the
- * others, and a bare error naming no location helps nobody.
- */
-async function readEachLocation(config, locations, read) {
-  const lines = await Promise.all(
-    locations.map(async (location) => {
-      const entry = { position: positionOf(config.locations, location.id), name: location.name };
-      try {
-        return { ...entry, failed: false, ...(await read(location)) };
-      } catch (err) {
-        logger.error(`UV query failed for ${location.name}`, err);
-        return { ...entry, failed: true, ...failureDetail(err) };
-      }
-    }),
-  );
-  return { lines, failed: lines.filter((line) => line.failed).length };
 }
 
 export const uvStation = {
@@ -407,50 +357,9 @@ export const uvStation = {
   // Manifest actions owned by this device type (see the `actions` field of
   // `gladys-assistant-integration.json`).
   actions: {
-    /**
-     * Live check of the data source, on EVERY location: "is it working?" is a
-     * question about the install, not about one entry of a list, and nothing in
-     * this screen designates a single location anyway.
-     */
+    /** Live check of the data source, on every location (see providerTest.js). */
     async test_provider(gladys, { config }) {
-      const locations = watchedLocations(config);
-      if (locations.length === 0) {
-        return NO_LOCATION_MESSAGE;
-      }
-      logger.info(`Action test_provider -> live request for ${locations.length} location(s)`);
-
-      const { lines, failed } = await readEachLocation(config, locations, async (location) => {
-        const reading = await readUvIndex(location);
-        const level = reading.level ?? 0;
-        // The data timestamp answers the other half of "is it working?": a
-        // provider that responds with yesterday's hour is up and still wrong.
-        const stampedIn = (language) => {
-          const stamp = formatMeasuredAt(reading.measuredAt, language);
-          return stamp === null ? '' : `, ${language === 'en' ? 'updated' : 'màj'} ${stamp}`;
-        };
-        return {
-          en:
-            `UV ${reading.uvIndex ?? '—'} (${UV_LEVEL_LABELS[level].en}), ` +
-            `max today ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}${stampedIn('en')}`,
-          fr:
-            `UV ${reading.uvIndex ?? '—'} (${UV_LEVEL_LABELS[level].fr}), ` +
-            `max du jour ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}${stampedIn('fr')}`,
-        };
-      });
-
-      // "Provider OK" only when it actually is: the header counts the locations
-      // that failed, and each of their lines says why.
-      const header =
-        failed === 0
-          ? {
-              en: `UV provider OK — ${locations.length} location(s):`,
-              fr: `Fournisseur UV OK — ${locations.length} lieu(x) :`,
-            }
-          : {
-              en: `UV provider — ${failed} of ${locations.length} location(s) failing:`,
-              fr: `Fournisseur UV — ${failed} lieu(x) en échec sur ${locations.length} :`,
-            };
-      return report(header, lines);
+      return testProvider(config, watchedLocations(config));
     },
   },
 
@@ -474,11 +383,12 @@ export const uvStation = {
    * Gladys' own polling is not usable here: `poll_frequency` is a fixed enum of
    * intervals in milliseconds whose slowest value is one minute, while the CAMS
    * forecast is hourly. So the devices declare no poll_frequency and we run our
-   * own timer at the configured interval.
+   * own timer at the configured interval — `normalizeConfig` keeps it within
+   * the manifest bounds (10 min to 6 h), which is the only floor there is.
    * @returns {() => void} cleanup, to stop the timer on disconnection
    */
   startPolling(gladys, config) {
-    const intervalMs = Math.max(MIN_REFRESH_SECONDS, config.poll_frequency) * 1000;
+    const intervalMs = config.poll_frequency * 1000;
     const count = watchedLocations(config).length;
     logger.info(`Refreshing ${count} location(s) every ${Math.round(intervalMs / 1000)} s`);
 
@@ -492,44 +402,65 @@ export const uvStation = {
   /**
    * One refresh cycle over every location, which NEVER throws: a rejection
    * inside a timer callback would become an unhandled rejection and take the
-   * container down. Outages are reported through `setConnectionStatus` instead,
+   * container down. Outages are reported through the connection status instead,
    * and the next cycle simply tries again.
+   *
+   * ONE request reads every location (`readUvIndexes`), with the background
+   * retry policy: a brief outage of the API costs a few seconds, not the whole
+   * cycle. It never takes a stale value — re-publishing an old reading would
+   * stamp old numbers as new states.
    */
   async refresh(gladys, config) {
-    const locations = watchedLocations(config);
-    const outcomes = await Promise.all(
-      locations.map(async (location) => {
-        try {
-          await poll(gladys, location, config.language);
-          return null;
-        } catch (err) {
-          logger.error(`UV refresh failed for ${describeLocation(location)}`, err);
-          return failureMessage(err, location.name);
-        }
-      }),
-    );
-
-    // The dashboard cards read the same provider: pull them again now, so they
-    // show what the devices were just given rather than waiting for their TTL.
-    nudgeWidgets(gladys);
-
-    const failures = outcomes.filter(Boolean);
-    if (failures.length === 0) {
-      await gladys.setConnectionStatus(true).catch(() => {});
-      return;
-    }
-    // Only the first reason is spelled out: the status line is one line, and two
-    // stack traces in it help nobody.
-    const [first] = failures;
-    const others =
-      failures.length > 1
-        ? {
-            en: ` (+${failures.length - 1} other location(s) failing)`,
-            fr: ` (+${failures.length - 1} autre(s) lieu(x) en échec)`,
+    try {
+      const locations = watchedLocations(config);
+      const readings = await readUvIndexes(locations, { retry: RETRY.BACKGROUND });
+      const outcomes = await Promise.all(
+        locations.map(async (location, index) => {
+          try {
+            const { reading, error } = readings[index];
+            if (error) {
+              throw error;
+            }
+            await publishReading(gladys, location, reading, config.language);
+            return null;
+          } catch (err) {
+            logger.error(`UV refresh failed for ${describeLocation(location)}`, err);
+            return failureMessage(err, location.name);
           }
-        : { en: '', fr: '' };
-    await gladys
-      .setConnectionStatus(false, { en: `${first.en}${others.en}`, fr: `${first.fr}${others.fr}` })
-      .catch(() => {});
+        }),
+      );
+
+      // The dashboard cards read the same provider: pull them again now, so
+      // they show what the devices were just given rather than waiting for
+      // their TTL.
+      nudgeWidgets(gladys);
+
+      await reportStatus(gladys, ...cycleVerdict(outcomes.filter(Boolean)));
+    } catch (err) {
+      // Nothing above is expected to throw; this is the guarantee that a bug
+      // in it still never reaches the timer.
+      logger.error('UV refresh cycle failed', err);
+    }
   },
 };
+
+/**
+ * The status a cycle ends with: connected, or the first failing location — the
+ * status line is one line, and two stack traces in it help nobody.
+ * @param {Array<{ en: string, fr: string }>} failures
+ * @returns {[boolean, { en: string, fr: string }?]}
+ */
+function cycleVerdict(failures) {
+  if (failures.length === 0) {
+    return [true];
+  }
+  const [first] = failures;
+  const others =
+    failures.length > 1
+      ? {
+          en: ` (+${failures.length - 1} other location(s) failing)`,
+          fr: ` (+${failures.length - 1} autre(s) lieu(x) en échec)`,
+        }
+      : { en: '', fr: '' };
+  return [false, { en: `${first.en}${others.en}`, fr: `${first.fr}${others.fr}` }];
+}

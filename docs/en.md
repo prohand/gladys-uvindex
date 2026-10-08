@@ -122,6 +122,13 @@ three times, and that is the point: it tells you how old the numbers are, not
 how often they were fetched. When a refresh fails, nothing is published at all —
 the timestamp stops moving and the age becomes visible on the dashboard.
 
+A brief outage of the source does not cost a whole refresh: the integration
+tries again straight away, twice, a few seconds apart. If the source stays
+unreachable, the **widgets** and the "Read the UV index" scene action show the
+last known value — 3 hours old at most — with its own timestamp, which tells
+honestly how old it is; the devices never receive an old value passed off as a
+new one.
+
 "Test the UV provider" ends each line with the same timestamp, so a source that
 answers with yesterday's hour shows up as what it is.
 
@@ -195,13 +202,16 @@ are the ones of the action in your scene: the editor offers them.
   to your scenes (level label, advice) follow this setting too.
 - **Refresh interval** — 30 minutes by default, between 10 minutes and 6 hours.
   The CAMS forecast is hourly, so there is nothing to gain from going much below
-  half an hour.
+  half an hour. Every location is read in a single request, and a value is only
+  asked for once an hour, however many refreshes and widgets there are.
 
 ## Checking that it works
 
 The **"Test the UV provider"** button queries the source live for every location
 and shows the index it got, in the same numbered format as the location listing.
-If one location fails, its line says why and the others still answer.
+If one location fails, its line says why and the others still answer. A location
+the source has no value for reads "no data", never a level. Unlike the widgets,
+this button never shows an old value: a source that is down reads as down.
 
 The Supervision screen also shows the integration's status: while no location is
 configured, it says one has to be added.

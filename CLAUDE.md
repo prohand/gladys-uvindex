@@ -54,8 +54,20 @@ change or report it. Consequences worth internalising:
   documented way to store integration-owned state outside the schema. A test
   asserts it stays out of the schema.
 - **`setConfig` does not come back through `onConfigUpdated`.** A self-initiated
-  write must update the in-memory `config` by hand. The `setConfig` dependency
-  injected into the editor in `index.js` is the only place allowed to do this.
+  write must update the in-memory `config` by hand. `runtime.setConfig`
+  (`src/runtime.js`), injected into the editor by `index.js`, is the only place
+  allowed to do this.
+- **The three writing actions run one at a time.** `add_location`,
+  `import_houses` and `remove_location` read the list, wait for the network, then
+  write it: two clicks close together would both start from the same list and
+  the second write would erase the first location. They go through a promise
+  queue (`oneAtATime`), and each re-reads the list right before its `commit`. A
+  failed action never blocks the queue.
+- **`commit` is a write, then a publication, and they fail differently.** A
+  failed `setConfig` throws (nothing changed). A failed re-publication does NOT
+  undo the write: it comes back as an `{ en, fr }` sentence — "saved, but
+  publishing the devices failed: <reason>" — that the action appends to its
+  answer, and the action stops promising the Discovery tab.
 - **Coordinates AND postal codes travel as TEXT** (`src/coordinates.js`), in the
   form and in the stored list. `Number('')` is 0 — a valid latitude — a `number`
   field is an `<input type="number">` the browser sanitizes in its own locale (a
@@ -140,11 +152,78 @@ wanted.
 ### One extension registry
 
 **`src/uv/`** — providers expose `{ key, name, supports(point),
-fetchUvIndex(point) }`, first match wins, so callers never name an
-implementation. Order matters: a national source registered before
-`openMeteoProvider` overrides it for its own area. `openMeteoProvider.supports()`
-returns `true` for every point (CAMS global is worldwide); the check stays
-because a narrower provider will need it.
+fetchUvIndex(point, options) }` and optionally `fetchUvIndexes(points, options)`
+(one `{ value } | { error }` per point, never rejects), first match wins, so
+callers never name an implementation. `readUvIndex` reads one location,
+`readUvIndexes` several — one call per provider. Order matters: a national
+source registered before `openMeteoProvider` overrides it for its own area.
+`openMeteoProvider.supports()` returns `true` for every point (CAMS global is
+worldwide); the check stays because a narrower provider will need it.
+
+`options` is `{ retry, allowStale }`, and WHO is waiting decides it:
+
+| Caller                          | `retry`             | `allowStale` |
+| ------------------------------- | ------------------- | ------------ |
+| refresh cycle                   | `RETRY.BACKGROUND`  | no           |
+| widgets, scene action           | `RETRY.INTERACTIVE` | yes (≤ 3 h)  |
+| `test_provider`, `onPoll`       | `RETRY.INTERACTIVE` | no           |
+| commune lookup (`add_location`) | `RETRY.ACTION`      | —            |
+
+### The network is flaky, and a lost cycle is half an hour
+
+- **Retries (`src/http.js`, `fetchWithRetry`)**: network errors (timeouts
+  included), 5xx and 429 are retried with an exponential backoff of which a
+  random half is kept; a 4xx is an answer and never retried. `Retry-After` is
+  honoured when it fits the policy's `maxDelayMs`, and a longer one means no
+  retry at all. A policy has a `budgetMs` past which no attempt starts: the
+  interactive one (1 retry, ≤ 3 s) stays far inside the widget deadline
+  (`PULL_DEADLINE_MS`, 9 s; one Open-Meteo request alone is allowed 10 s).
+- **The cache (`src/uv/openMeteo.js`) expires at the next FULL HOUR of the
+  container clock** — an epoch instant, never the local hour of the point —
+  because CAMS `current` is hourly (Kolkata's hour turns at :30 local, a UTC full
+  hour). Capped at one hour, so a clock jumping back cannot keep an entry fresh.
+- **Stale fallback**: an expired entry is kept up to `STALE_LIMIT_MS` (3 h) and
+  served, with its own `measuredAt`, to a caller that passes `allowStale` when
+  the API fails. The refresh cycle never does: re-publishing an old reading would
+  stamp old numbers as new states. Entries past 3 h are purged on read and on
+  every write.
+- **Requests in flight are shared**: the Promise of a point's request is kept
+  until it settles (and removed when it rejects), so the refresh, a widget pull
+  and `onDeviceCreated` arriving together cost one request. A caller more
+  patient than the request it joined (more retries) tries again on its own if
+  that request fails.
+- **One request per cycle**: Open-Meteo takes comma-separated latitudes and
+  longitudes and answers an ARRAY of blocks, matched by `location_id` (absent on
+  the first, which is 0); `timezone=auto` applies per point. Only the points the
+  cache does not answer are asked for; the cache stays per point. A batch the API
+  REFUSES (4xx, or an `error` payload) is asked again point by point, so one bad
+  point never silences the others; an outage fails them all, once.
+
+### The runtime owns the lifecycle
+
+`src/runtime.js` holds the configuration, the publication and the timers;
+`index.js` only routes the SDK events to it, which is what makes the lifecycle
+testable (`test/runtime.test.js`).
+
+- **A new configuration always reaches the timers.** `republish` restarts (or
+  stops) the polling in a `finally`: Gladys refusing the batch must not leave
+  the old timers running with the old interval and language. `applyConfig`
+  (`onConfigUpdated`) never throws — the SDK would only log it at debug level.
+- **The configuration read at connection is `gladys.config`.** The SDK fetches
+  it (`GET /config`) right before it emits `'connected'`, on every connection.
+- **The status line is sent on change only** (`src/status.js`): one memory per
+  SDK instance, forgotten at every (re)connection so the first status always
+  reaches a Gladys that may have restarted. A refused device batch is HELD: a
+  good refresh cycle reports it instead of "connected" until a publication is
+  accepted — otherwise the stations already created keep updating and the empty
+  Discovery tab has nothing to say why.
+- **A failed first `connect()` does not exit.** It only rejects on a token
+  refusal (close code 4000), and the SDK keeps its reconnection loop armed for
+  life after it, because that refusal can be transient (Gladys still booting).
+  Exiting would throw that loop away; the failure is logged and the process
+  stays up for the next attempt.
+- **The scene baselines follow the list**: `retainLevelMemory` drops the
+  locations that left it every time the timers are re-synchronized.
 
 ### The manifest is a contract checked by tests
 
@@ -217,7 +296,8 @@ introduced (SDK 0.14.0); older cores reject the whole manifest on them, hence
   A position would shift when another location is removed. Only devices the
   user already created are offered — that is the core's rule, not ours.
 - **Widgets (`src/widgets.js`) are pulled, not pushed.** `onWidgetGet` builds
-  the content from ONE `readUvIndex` (the provider cache makes it cheap), so the
+  the content from ONE `readUvIndex` (the provider cache makes it cheap; the
+  read `index.js` injects retries once and falls back on the last value), so the
   number, its level and its advice on a card can never disagree — which is why
   the tiles are inline values and not bound to the device features.
   `uvStation.refresh` calls `nudgeWidgets` after each cycle. Every text is
@@ -227,9 +307,10 @@ introduced (SDK 0.14.0); older cores reject the whole manifest on them, hence
   `utc_offset_seconds` to the local wall-clock hour — text in, text out, still no
   `Date`. Without an offset the chart is left out, never drawn in UTC.
 - **The trigger (`exposure_level_changed`) is an event, one per transition.**
-  It is fired from `poll()` after the states are published, by comparing with an
-  in-memory baseline per location id (`src/scenes.js`); the first reading after a
-  start only sets the baseline, a null level leaves it alone. A threshold is a
+  It is fired from `publishReading()` after the states are published, by
+  comparing with an in-memory baseline per location id (`src/scenes.js`); the
+  first reading after a start only sets the baseline, a null level leaves it
+  alone. A threshold is a
   STATE question — the level feature and `device.new-state` answer it.
 - **The action (`read_uv_index`) never fires the trigger** and never touches the
   baseline: a scene bound to the trigger that runs the action would loop. It
@@ -253,14 +334,18 @@ cloning when in doubt (`GladysAssistant/Gladys`, public).
 - **`poll_frequency` is an ENUM in MILLISECONDS capped at one minute.** Anything
   else is rejected and the **whole batch** is refused. Hence the self-driven
   timer: the devices declare no `poll_frequency`, `startPolling` refreshes
-  immediately then every `poll_frequency` seconds, floored at
-  `MIN_REFRESH_SECONDS`.
+  immediately then every `poll_frequency` seconds. The only floor is
+  `normalizeConfig`, which clamps the setting to the manifest bounds
+  (`POLL_FREQUENCY_LIMITS`, 600 to 21600 s).
 - **Every feature needs an explicit numeric `min` and `max`** —
   `t_device_feature.min/max` are `NOT NULL` with no default, text features
-  included. Publishing passes, then the user's "add device" click fails.
+  included. Publishing passes, then the user's "add device" click fails. The
+  `max` is a display range, not a validation: `saveStates` accepts any finite
+  number, so `UV_INDEX_MAX` (16) clips nothing and `roundUvIndex` must not either.
 - **A refused batch is invisible unless you say so**: the error only reaches the
-  SDK acknowledgement. `publishDevices()` logs the payload at debug level and
-  reports the reason through `setConnectionStatus`.
+  SDK acknowledgement. `publishDevices()` logs the payload at debug level,
+  reports the reason through the connection status and holds it there (see
+  "The runtime owns the lifecycle").
 - **The core silently drops states for a feature that does not exist yet.**
   States published before the user adds the device go nowhere, which is why
   `index.js` listens to `onDeviceCreated` and refreshes immediately.
@@ -302,13 +387,28 @@ cloning when in doubt (`GladysAssistant/Gladys`, public).
   published only when that index is.
 - **A refresh cycle never throws.** A rejection inside a timer callback would
   take the container down; one location failing must not silence the others.
+- **A stale value is never published as a state.** Only the display paths
+  (widgets, scene action) accept the stale fallback, and they show its hour.
+- **Error reasons go through `errorReason()`** (`src/errors.js`): one line, cut
+  to 150 characters, with the `cause.code` Node hides behind "fetch failed".
 
 ## Testing
 
 Tests never touch the network: `globalThis.fetch` is stubbed per-file and
-restored in `afterEach`. `src/uv/openMeteo.js` keeps a module-level TTL cache, so
-tests that count requests must call `clearUvCache()` in `beforeEach` — otherwise
-state leaks between tests.
+restored in `afterEach`. `src/uv/openMeteo.js` keeps a module-level cache and the
+requests in flight, so tests that count requests must call `clearUvCache()` in
+`beforeEach` — otherwise state leaks between tests. A multi-point request is
+answered with an ARRAY of blocks (`location_id` on all but the first), as the
+real API does.
+
+A test that makes a request fail must also stub the wait between retries —
+`setRetrySleep(async () => {})` in `beforeEach`, `setRetrySleep(null)` in
+`afterEach` — or it lives through real backoff delays. The cache expiry is
+tested with `mock.timers.enable({ apis: ['Date'] })`; `mock.timers.reset()` in
+`afterEach`.
+
+The status memory (`src/status.js`) is per SDK instance: a fresh
+`createFakeGladys()` per test is all the isolation it needs.
 
 `src/scenes.js` keeps the per-location level baseline at module level too: tests
 that poll the same location twice call `clearLevelMemory()` in `beforeEach`.

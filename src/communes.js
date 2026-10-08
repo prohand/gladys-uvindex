@@ -31,12 +31,16 @@
 // -----------------------------------------------------------------------------
 
 import { createLogger } from '@gladysassistant/integration-sdk';
+import { fetchWithRetry, RETRY } from './http.js';
 
 const logger = createLogger({ name: 'communes' });
 
 // Overridable for local development; the default is the public API.
 const API_BASE_URL = process.env.GEO_API_URL ?? 'https://geo.api.gouv.fr';
 
+// The timeout of ONE request. The lookup runs under the "Add a location"
+// button, whose answer the core waits 30 s for: the retry policy (`RETRY.ACTION`,
+// src/http.js) stops starting new attempts well before that.
 const REQUEST_TIMEOUT_MS = 15_000;
 
 /** How many communes a "be more precise" message lists. */
@@ -131,13 +135,13 @@ export async function searchCommunes(postalCode) {
   const url = `${API_BASE_URL}/communes?${params.toString()}`;
   logger.debug('Commune lookup ->', url);
 
-  const response = await fetch(url, {
-    headers: { Accept: 'application/json' },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  // A brief outage of the registry is retried rather than turned into "click
+  // again"; a 4xx, an answer, is not.
+  const response = await fetchWithRetry(url, {
+    label: 'API Découpage administratif',
+    timeoutMs: REQUEST_TIMEOUT_MS,
+    retry: RETRY.ACTION,
   });
-  if (!response.ok) {
-    throw new Error(`API Découpage administratif HTTP ${response.status}`);
-  }
 
   return toCommunes(await response.json());
 }

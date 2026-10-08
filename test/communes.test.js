@@ -3,7 +3,7 @@
 // afterwards: these tests never touch the network.
 // -----------------------------------------------------------------------------
 
-import { afterEach, test } from 'node:test';
+import { afterEach, beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   communeContext,
@@ -14,6 +14,7 @@ import {
   resolvePostalCode,
   searchCommunes,
 } from '../src/communes.js';
+import { setRetrySleep } from '../src/http.js';
 
 const realFetch = globalThis.fetch;
 let requests = [];
@@ -38,8 +39,14 @@ function apiCommune(nom, code, [longitude, latitude], departement, region, codes
   };
 }
 
+beforeEach(() => {
+  // The retries are exercised, not waited for.
+  setRetrySleep(async () => {});
+});
+
 afterEach(() => {
   globalThis.fetch = realFetch;
+  setRetrySleep(null);
 });
 
 test('a postal code is five digits, spaces tolerated', () => {
@@ -115,6 +122,34 @@ test('an invalid postal code never reaches the network', async () => {
 test('an HTTP failure propagates, so the caller can report it', async () => {
   stubFetch([], { ok: false, status: 500 });
   await assert.rejects(() => searchCommunes('44300'), /HTTP 500/);
+  assert.equal(requests.length, 3, 'a 5xx is retried twice before it is reported');
+});
+
+test('a brief outage of the registry is retried rather than reported', async () => {
+  const answers = [
+    { ok: false, status: 502, json: async () => ({}) },
+    {
+      ok: true,
+      status: 200,
+      json: async () => [apiCommune('Nantes', '44109', [-1.5534, 47.2172], 'L-A', 'PdL')],
+    },
+  ];
+  let call = 0;
+  globalThis.fetch = async () => answers[Math.min(call++, answers.length - 1)];
+
+  const communes = await searchCommunes('44300');
+
+  assert.equal(call, 2);
+  assert.deepEqual(
+    communes.map((commune) => commune.name),
+    ['Nantes'],
+  );
+});
+
+test('a 4xx from the registry is an answer, not retried', async () => {
+  stubFetch([], { ok: false, status: 400 });
+  await assert.rejects(() => searchCommunes('44300'), /HTTP 400/);
+  assert.equal(requests.length, 1);
 });
 
 test('one commune for a code is the answer', () => {

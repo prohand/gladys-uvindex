@@ -6,6 +6,10 @@ All notable changes to this integration are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Every Open-Meteo request failed with `ETIMEDOUT` on a network without IPv6 far from the server (Australia): Node gave each connection attempt 250 ms, now 1 s (#18).
+
 ## [2.3.1] - 2026-10-08
 
 - Maintenance release, no functional change.

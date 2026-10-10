@@ -171,6 +171,11 @@ worldwide); the check stays because a narrower provider will need it.
 
 ### The network is flaky, and a lost cycle is half an hour
 
+- **Connection attempts (`src/network.js`)**: Node gives each address of a
+  dual-stack host 250 ms before trying the next one. Without an IPv6 route,
+  only IPv4 is left, and a distant server (~315 ms from Australia) never
+  connects: every request ends in `ETIMEDOUT` (issue #18). `index.js` raises
+  the process-wide default to 1 s before creating the SDK — never lowers it.
 - **Retries (`src/http.js`, `fetchWithRetry`)**: network errors (timeouts
   included), 5xx and 429 are retried with an exponential backoff of which a
   random half is kept; a 4xx is an answer and never retried. `Retry-After` is

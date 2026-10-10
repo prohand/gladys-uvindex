@@ -34,11 +34,16 @@ import { locationOfDevice, watchedLocations } from './src/devices/uvStation.js';
 import { fetchHouses } from './src/houses.js';
 import { RETRY } from './src/http.js';
 import { createLocationEditor } from './src/locationEditor.js';
+import { widenConnectAttempts } from './src/network.js';
 import { createRuntime } from './src/runtime.js';
 import { createSceneActions } from './src/scenes.js';
 import { readUvIndex } from './src/uv/index.js';
 import { createWidgets } from './src/widgets.js';
 import { withPullDeadline } from './src/widgetDeadline.js';
+
+// Before any connection: Node's 250 ms per address is too short for a distant
+// server on a network without IPv6 (src/network.js, issue #18).
+widenConnectAttempts();
 
 const gladys = new GladysIntegration();
 

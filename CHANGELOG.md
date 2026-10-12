@@ -6,6 +6,8 @@ All notable changes to this integration are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-12
+
 ### Added
 
 - "Add my Gladys houses" takes an optional house: pick one of your Gladys houses to add that one only, or leave the field empty to add them all, as before. Requires Gladys 5.2.0.
@@ -113,7 +115,8 @@ First public release.
 - UV index integration with locations added by postal code
 - Redraw the catalog cover around the UV index itself
 
-[Unreleased]: https://github.com/prohand/gladys-uvindex/compare/v2.3.2...HEAD
+[Unreleased]: https://github.com/prohand/gladys-uvindex/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/prohand/gladys-uvindex/compare/v2.3.2...v2.4.0
 [2.3.2]: https://github.com/prohand/gladys-uvindex/compare/v2.3.1...v2.3.2
 [2.3.1]: https://github.com/prohand/gladys-uvindex/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/prohand/gladys-uvindex/compare/v2.2.0...v2.3.0

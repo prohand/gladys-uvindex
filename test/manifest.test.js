@@ -519,6 +519,28 @@ test('the catalog categories stay inside the controlled vocabulary', () => {
   }
 });
 
+test('the import button can be narrowed to one Gladys house', () => {
+  // Optional: left empty, every house is imported, as before the field. The
+  // core lists the houses by name and hands over the selector.
+  const picker = (action('import_houses').fields ?? []).find((field) => field.key === 'house');
+  assert.equal(picker.type, 'select');
+  assert.equal(picker.source, 'houses');
+  assert.equal(picker.required, false);
+  assert.equal(picker.default, undefined, 'a dynamic select takes no default');
+  assert.equal(picker.options, undefined, 'source and options are mutually exclusive');
+});
+
+test('declaring a "houses" select requires a range starting at 5.2.0', () => {
+  // `source: "houses"` is only known from Gladys 5.2.0 on: an older core
+  // rejects the whole manifest over it, and the store refuses the pair.
+  if (allFields().some((field) => field.source === 'houses')) {
+    assert.ok(
+      startsAtLeast(5, 2),
+      `source "houses" requires gladys_version >=5.2.0, got "${manifest.gladys_version}"`,
+    );
+  }
+});
+
 test('declaring categories requires a compatibility range starting at 4.86.0', () => {
   // Older cores validate a manifest against a strict allowlist of top-level
   // fields and reject the whole thing on an unknown one: `categories` is only

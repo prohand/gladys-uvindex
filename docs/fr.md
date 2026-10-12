@@ -26,6 +26,10 @@ Trois choses à savoir :
   Le lieu obtenu est un lieu ordinaire, que vous renommez et supprimez comme les
   autres, et une maison déplacée dans Gladys ensuite ne déplace pas son lieu.
 
+Pour n'ajouter qu'une de vos maisons — une maison de vacances que vous ne voulez
+pas surveiller reste de côté — choisissez-la dans le champ **Maison** du bouton
+(Gladys 5.2 ou plus) ; laissé vide, toutes les maisons sont ajoutées.
+
 Relancer l'action est sans risque : une maison déjà surveillée est signalée, pas
 ajoutée une deuxième fois.
 

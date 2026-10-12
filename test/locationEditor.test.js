@@ -282,6 +282,49 @@ test('one click turns the Gladys houses into locations', async () => {
   assert.equal(state.writes.length, 1);
 });
 
+test('a house picked in the form is the only one added', async () => {
+  const { editor, state } = setup({
+    houses: [house('Maison', 47.2172, -1.5534), house('Chalet', 46.5, 6.6)],
+  });
+
+  const message = await editor.actions.import_houses({ house: 'chalet' });
+
+  assert.match(message.fr, /1 maison\(s\) Gladys ajoutée\(s\)/);
+  assert.deepEqual(
+    state.config.locations.map((location) => location.name),
+    ['Chalet'],
+  );
+});
+
+test('an empty house field still adds every house', async () => {
+  const { editor, state } = setup({
+    houses: [house('Maison', 47.2172, -1.5534), house('Chalet', 46.5, 6.6)],
+  });
+
+  await editor.actions.import_houses({ house: '' });
+
+  assert.equal(state.config.locations.length, 2);
+});
+
+test('a picked house deleted since is refused, never swapped for all of them', async () => {
+  const { editor, state } = setup({ houses: [house('Maison', 47.2172, -1.5534)] });
+
+  const message = await editor.actions.import_houses({ house: 'chalet' });
+
+  assert.match(message.en, /no longer exists in Gladys/);
+  assert.match(message.fr, /n'existe plus dans Gladys/);
+  assert.equal(state.config.locations.length, 0);
+});
+
+test('a picked house with no position is named, not watched at (0, 0)', async () => {
+  const { editor, state } = setup({ houses: [house('Bureau'), house('Maison', 47.2172, -1.5534)] });
+
+  const message = await editor.actions.import_houses({ house: 'bureau' });
+
+  assert.match(message.fr, /« Bureau »/);
+  assert.equal(state.config.locations.length, 0);
+});
+
 test('a house already watched is named rather than added twice', async () => {
   const { editor, state } = setup({
     locations: [{ id: 'loc-1', name: 'Domicile', latitude: '47.2172', longitude: '-1.5534' }],

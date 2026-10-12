@@ -30,9 +30,11 @@ Since Gladys 5.1 the integration also brings:
 - **a scene action**, `read_uv_index` — read a location now and hand its values
   (index, peak and its hour, level, advice…) to the next actions of the scene.
 
-`gladys_version` is therefore `>=5.1.0`: `widgets`, `scene_triggers` and
-`scene_actions` are manifest fields older cores reject outright, like
-`categories` before them (4.86.0).
+`gladys_version` is therefore `>=5.2.0`: `widgets`, `scene_triggers` and
+`scene_actions` are manifest fields older cores reject outright (5.1.0), like
+`categories` before them (4.86.0), and the optional `house` field of "Add my
+Gladys houses" — a select with `source: "houses"` that narrows the import to one
+house — needs 5.2.0.
 
 In the store catalog this integration sits on the **`environment`** shelf, the
 one the store's own seed mapping already assigned it — the UV index is outdoor

@@ -24,6 +24,10 @@ Three things to know:
   out is an ordinary location, renamed and removed like the others, and a house
   moved in Gladys afterwards does not move its location.
 
+To add only one of your houses — a holiday home you do not want watched stays
+out — pick it in the button's **House** field (Gladys 5.2 or later); left empty,
+every house is added.
+
 Clicking again is safe: a house that is already watched is reported, not added a
 second time.
 

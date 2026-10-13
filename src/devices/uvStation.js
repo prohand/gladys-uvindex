@@ -32,7 +32,7 @@ import {
   DEVICE_FEATURE_UNITS,
 } from '@gladysassistant/integration-sdk';
 import { RETRY } from '../http.js';
-import { DEFAULT_LANGUAGE, inLanguage } from '../language.js';
+import { DEFAULT_LANGUAGE, inEveryLanguage, inLanguage } from '../language.js';
 import { announceLevelChange } from '../scenes.js';
 import { reportStatus } from '../status.js';
 import { findProvider, readUvIndex, readUvIndexes } from '../uv/index.js';
@@ -57,19 +57,49 @@ export const FEATURE = {
   MEASURED_AT: 'measured-at',
 };
 
-/** Names of the features, in the two languages the device names can be in. */
+/** Names of the features, in every language the device names can be in. */
 const FEATURE_NAMES = {
-  [FEATURE.UV_INDEX]: { en: 'UV index', fr: 'Indice UV' },
-  [FEATURE.UV_INDEX_MAX_TODAY]: { en: 'UV index max today', fr: 'Indice UV max du jour' },
-  [FEATURE.UV_INDEX_CLEAR_SKY]: { en: 'UV index (clear sky)', fr: 'Indice UV (ciel clair)' },
-  [FEATURE.EXPOSURE_LEVEL]: { en: 'UV exposure level', fr: "Niveau d'exposition UV" },
+  [FEATURE.UV_INDEX]: { en: 'UV index', fr: 'Indice UV', de: 'UV-Index', es: 'Índice UV' },
+  [FEATURE.UV_INDEX_MAX_TODAY]: {
+    en: 'UV index max today',
+    fr: 'Indice UV max du jour',
+    de: 'UV-Index Tagesmaximum',
+    es: 'Índice UV máximo del día',
+  },
+  [FEATURE.UV_INDEX_CLEAR_SKY]: {
+    en: 'UV index (clear sky)',
+    fr: 'Indice UV (ciel clair)',
+    de: 'UV-Index (klarer Himmel)',
+    es: 'Índice UV (cielo despejado)',
+  },
+  [FEATURE.EXPOSURE_LEVEL]: {
+    en: 'UV exposure level',
+    fr: "Niveau d'exposition UV",
+    de: 'UV-Belastungsstufe',
+    es: 'Nivel de exposición UV',
+  },
   [FEATURE.EXPOSURE_LEVEL_TEXT]: {
     en: 'UV exposure level (text)',
     fr: "Niveau d'exposition UV (texte)",
+    de: 'UV-Belastungsstufe (Text)',
+    es: 'Nivel de exposición UV (texto)',
   },
-  [FEATURE.PROTECTION_ADVICE]: { en: 'Sun protection advice', fr: 'Conseil de protection solaire' },
-  [FEATURE.MEASURED_AT]: { en: 'Data updated at', fr: 'Données mises à jour le' },
+  [FEATURE.PROTECTION_ADVICE]: {
+    en: 'Sun protection advice',
+    fr: 'Conseil de protection solaire',
+    de: 'Sonnenschutz-Empfehlung',
+    es: 'Consejo de protección solar',
+  },
+  [FEATURE.MEASURED_AT]: {
+    en: 'Data updated at',
+    fr: 'Données mises à jour le',
+    de: 'Daten aktualisiert am',
+    es: 'Datos actualizados el',
+  },
 };
+
+/** The device name, before the location's: "Indice UV — Nantes". */
+const DEVICE_NAME = { en: 'UV index', fr: 'Indice UV', de: 'UV-Index', es: 'Índice UV' };
 
 /** Shape shared by the three numeric UV index features. */
 function uvIndexFeature(externalId, name) {
@@ -162,7 +192,7 @@ export function locationOfDevice(gladys, config, externalId) {
  * The names are written in the configured language and nowhere else: a device
  * name and a feature name are plain strings the core copies into its own tables
  * when the user creates the device, so this is the ONE place where the
- * integration has to pick a language instead of handing Gladys `{ en, fr }`.
+ * integration has to pick a language instead of handing Gladys `{ en, fr, de, es }`.
  * @param {import('@gladysassistant/integration-sdk').GladysIntegration} gladys
  * @param {import('../locations.js').Location} location
  * @param {string} [language] one of LANGUAGES (see src/language.js)
@@ -172,7 +202,7 @@ export function buildDevice(gladys, location, language = DEFAULT_LANGUAGE) {
   const featureName = (key) => inLanguage(FEATURE_NAMES[key], language);
 
   return {
-    name: `${language === 'en' ? 'UV index' : 'Indice UV'} — ${location.name}`,
+    name: `${inLanguage(DEVICE_NAME, language)} — ${location.name}`,
     external_id: ids.device,
     // NO poll_frequency on purpose: the core only accepts a fixed enum of
     // intervals in MILLISECONDS, capped at one minute, and anything else has
@@ -329,10 +359,10 @@ export async function poll(gladys, location, language = DEFAULT_LANGUAGE) {
 /** The same reason, named, for the one-line connection status. */
 function failureMessage(err, locationName) {
   const detail = failureDetail(err);
-  return {
-    en: `${locationName}: ${detail.en}`,
-    fr: `${locationName} : ${detail.fr}`,
-  };
+  // French puts a space before the colon; the other languages do not.
+  return inEveryLanguage(
+    (language) => `${locationName}${language === 'fr' ? ' :' : ':'} ${detail[language]}`,
+  );
 }
 
 export const uvStation = {
@@ -447,20 +477,23 @@ export const uvStation = {
 /**
  * The status a cycle ends with: connected, or the first failing location — the
  * status line is one line, and two stack traces in it help nobody.
- * @param {Array<{ en: string, fr: string }>} failures
- * @returns {[boolean, { en: string, fr: string }?]}
+ * @param {Array<Record<string, string>>} failures `{ en, fr, de, es }` each
+ * @returns {[boolean, Record<string, string>?]}
  */
 function cycleVerdict(failures) {
   if (failures.length === 0) {
     return [true];
   }
   const [first] = failures;
+  const count = failures.length - 1;
   const others =
-    failures.length > 1
+    count > 0
       ? {
-          en: ` (+${failures.length - 1} other location(s) failing)`,
-          fr: ` (+${failures.length - 1} autre(s) lieu(x) en échec)`,
+          en: ` (+${count} other location(s) failing)`,
+          fr: ` (+${count} autre(s) lieu(x) en échec)`,
+          de: ` (+${count} weitere(r) Ort(e) fehlgeschlagen)`,
+          es: ` (+${count} ubicación(es) más con error)`,
         }
-      : { en: '', fr: '' };
-  return [false, { en: `${first.en}${others.en}`, fr: `${first.fr}${others.fr}` }];
+      : null;
+  return [false, inEveryLanguage((language) => `${first[language]}${others?.[language] ?? ''}`)];
 }

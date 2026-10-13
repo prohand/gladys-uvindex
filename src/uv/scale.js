@@ -56,12 +56,12 @@ export const UV_INDEX_MAX = 16;
 
 /** Wording of each level, for the features, the logs and the action messages. */
 export const UV_LEVEL_LABELS = {
-  0: { en: 'None', fr: 'Nul' },
-  1: { en: 'Low', fr: 'Faible' },
-  2: { en: 'Moderate', fr: 'Modéré' },
-  3: { en: 'High', fr: 'Élevé' },
-  4: { en: 'Very high', fr: 'Très élevé' },
-  5: { en: 'Extreme', fr: 'Extrême' },
+  0: { en: 'None', fr: 'Nul', de: 'Keine', es: 'Nulo' },
+  1: { en: 'Low', fr: 'Faible', de: 'Niedrig', es: 'Bajo' },
+  2: { en: 'Moderate', fr: 'Modéré', de: 'Mäßig', es: 'Moderado' },
+  3: { en: 'High', fr: 'Élevé', de: 'Hoch', es: 'Alto' },
+  4: { en: 'Very high', fr: 'Très élevé', de: 'Sehr hoch', es: 'Muy alto' },
+  5: { en: 'Extreme', fr: 'Extrême', de: 'Extrem', es: 'Extremo' },
 };
 
 /**
@@ -73,26 +73,38 @@ export const UV_LEVEL_ADVICE = {
   0: {
     en: 'No protection needed: no ultraviolet radiation.',
     fr: 'Aucune protection nécessaire : pas de rayonnement ultraviolet.',
+    de: 'Kein Schutz erforderlich: keine UV-Strahlung.',
+    es: 'No se necesita protección: no hay radiación ultravioleta.',
   },
   1: {
     en: 'No protection needed. You can safely stay outside.',
     fr: 'Aucune protection nécessaire. Vous pouvez rester dehors sans risque.',
+    de: 'Kein Schutz erforderlich. Du kannst unbedenklich draußen bleiben.',
+    es: 'No se necesita protección. Puede permanecer al aire libre sin riesgo.',
   },
   2: {
     en: 'Protection needed: seek shade around midday, wear a hat, sunglasses and sunscreen.',
     fr: 'Protection nécessaire : cherchez l’ombre à la mi-journée, portez chapeau, lunettes et crème solaire.',
+    de: 'Schutz erforderlich: mittags Schatten suchen, Hut, Sonnenbrille und Sonnencreme tragen.',
+    es: 'Protección necesaria: busque la sombra al mediodía, use sombrero, gafas de sol y crema solar.',
   },
   3: {
     en: 'Protection needed: avoid the sun between 12:00 and 16:00, shade, hat, sunglasses and sunscreen.',
     fr: 'Protection nécessaire : évitez le soleil entre 12h et 16h, ombre, chapeau, lunettes et crème solaire.',
+    de: 'Schutz erforderlich: zwischen 12 und 16 Uhr die Sonne meiden, Schatten, Hut, Sonnenbrille und Sonnencreme.',
+    es: 'Protección necesaria: evite el sol entre las 12:00 y las 16:00, sombra, sombrero, gafas de sol y crema solar.',
   },
   4: {
     en: 'Extra protection needed: avoid being outside between 12:00 and 16:00, shade, hat, sunglasses, sunscreen and a shirt.',
     fr: 'Protection renforcée : évitez de sortir entre 12h et 16h, ombre, chapeau, lunettes, crème solaire et vêtements couvrants.',
+    de: 'Verstärkter Schutz: zwischen 12 und 16 Uhr möglichst nicht hinausgehen, Schatten, Hut, Sonnenbrille, Sonnencreme und bedeckende Kleidung.',
+    es: 'Protección reforzada: evite salir entre las 12:00 y las 16:00, sombra, sombrero, gafas de sol, crema solar y ropa que cubra.',
   },
   5: {
     en: 'Take all precautions: unprotected skin burns within minutes, stay inside between 12:00 and 16:00.',
     fr: 'Toutes les précautions : la peau non protégée brûle en quelques minutes, restez à l’intérieur entre 12h et 16h.',
+    de: 'Alle Vorsichtsmaßnahmen treffen: Ungeschützte Haut verbrennt in wenigen Minuten, zwischen 12 und 16 Uhr drinnen bleiben.',
+    es: 'Todas las precauciones: la piel sin protección se quema en pocos minutos, permanezca en el interior entre las 12:00 y las 16:00.',
   },
 };
 

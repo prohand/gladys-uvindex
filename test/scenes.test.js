@@ -94,6 +94,19 @@ test('the event texts follow the language of the devices', async () => {
   assert.equal(gladys.sceneEvents[0].data.direction, DIRECTION.RISING);
 });
 
+test('the scene texts can be German or Spanish', () => {
+  const german = buildReadingOutputs(MAISON, READING, 'de');
+  assert.equal(german.level_label, 'Hoch');
+  assert.equal(german.level_max_today_label, 'Sehr hoch');
+  assert.equal(german.advice, UV_LEVEL_ADVICE[3].de);
+  assert.equal(german.measured_at, '06.08.2026 um 14:00');
+
+  const spanish = buildReadingOutputs(MAISON, READING, 'es');
+  assert.equal(spanish.level_label, 'Alto');
+  assert.equal(spanish.advice, UV_LEVEL_ADVICE[3].es);
+  assert.equal(spanish.measured_at, '06/08/2026 a las 14:00');
+});
+
 test('a missing value is left out of the event, never sent as 0', async () => {
   const gladys = createFakeGladys();
   const args = { deviceId: 'device:loc-1', location: MAISON, language: 'fr' };

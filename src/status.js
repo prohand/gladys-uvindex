@@ -23,7 +23,7 @@ const logger = createLogger({ name: 'status' });
 /** SDK instance -> the key of the last status sent. */
 const lastSent = new WeakMap();
 
-/** SDK instance -> the `{ en, fr }` problem a "connected" verdict must not hide. */
+/** SDK instance -> the `{ en, fr, de, es }` problem a "connected" verdict must not hide. */
 const held = new WeakMap();
 
 /**
@@ -31,7 +31,7 @@ const held = new WeakMap();
  * throws: it runs at the end of a refresh cycle.
  * @param {{ setConnectionStatus: (connected: boolean, message?: object) => Promise<unknown> }} gladys
  * @param {boolean} connected
- * @param {{ en: string, fr: string }} [message]
+ * @param {Record<string, string>} [message] `{ en, fr, de, es }`
  * @returns {Promise<boolean>} whether it was sent
  */
 export async function reportStatus(gladys, connected, message) {

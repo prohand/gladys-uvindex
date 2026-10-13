@@ -23,14 +23,15 @@
 // refresh cycle so they never lag the devices by more than that.
 //
 // LANGUAGE. Unlike a device name, a widget is rendered per reader: every text
-// goes out as `{ en, fr }` and the core picks the reader's language (English
-// for the others). `config.language` plays no part here.
+// goes out as `{ en, fr, de, es }` and the core picks the reader's language
+// (English for the others). `config.language` plays no part here.
 //
 // Missing data stays missing: a tile without a value shows "—", never 0, and a
 // card whose reading failed says so instead of vanishing.
 // -----------------------------------------------------------------------------
 
 import { createLogger, WIDGET_COLORS } from '@gladysassistant/integration-sdk';
+import { inEveryLanguage } from './language.js';
 import { formatHour, formatMeasuredAt, toIsoInstant } from './uv/measuredAt.js';
 import { UV_LEVEL_ADVICE, UV_LEVEL_LABELS } from './uv/scale.js';
 
@@ -74,21 +75,29 @@ function levelColor(level) {
   return UV_LEVEL_COLORS[level] ?? WIDGET_COLORS.NEUTRAL;
 }
 
-/** `{ en, fr }` of a level's wording, a dash when there is no level. */
+/** The same text in every language — a name, a number. */
+function everywhere(text) {
+  return inEveryLanguage(() => text);
+}
+
+/** `{ en, fr, de, es }` of a level's wording, a dash when there is no level. */
 function levelLabel(level) {
-  return UV_LEVEL_LABELS[level] ?? { en: MISSING, fr: MISSING };
+  return UV_LEVEL_LABELS[level] ?? everywhere(MISSING);
 }
 
-/** `{ en, fr }` of the data timestamp, or null when it is unreadable. */
+/** `{ en, fr, de, es }` of the data timestamp, or null when it is unreadable. */
 function stampOf(reading) {
-  const en = formatMeasuredAt(reading.measuredAt, 'en');
-  const fr = formatMeasuredAt(reading.measuredAt, 'fr');
-  return en === null || fr === null ? null : { en, fr };
+  return formatMeasuredAt(reading.measuredAt, 'en') === null
+    ? null
+    : inEveryLanguage((language) => formatMeasuredAt(reading.measuredAt, language));
 }
 
-/** A one-line body text, for a card that has nothing else to say. */
-function bodyText(en, fr) {
-  return { type: 'text', variant: 'body', text: { en, fr } };
+/**
+ * A one-line body text, for a card that has nothing else to say.
+ * @param {Record<string, string>} text `{ en, fr, de, es }`
+ */
+function bodyText(text) {
+  return { type: 'text', variant: 'body', text };
 }
 
 /**
@@ -109,8 +118,15 @@ function forecastChart(reading) {
   const chart = {
     type: 'chart',
     chart_type: 'area',
-    title: { en: "Today's forecast", fr: 'Prévision du jour' },
-    series: [{ name: { en: 'UV index', fr: 'Indice UV' }, points }],
+    title: {
+      en: "Today's forecast",
+      fr: 'Prévision du jour',
+      de: 'Heutige Vorhersage',
+      es: 'Previsión del día',
+    },
+    series: [
+      { name: { en: 'UV index', fr: 'Indice UV', de: 'UV-Index', es: 'Índice UV' }, points },
+    ],
     now_marker: true,
   };
   const peakAt = toIsoInstant(reading.peakTime, reading.utcOffsetSeconds);
@@ -119,7 +135,12 @@ function forecastChart(reading) {
       {
         t: peakAt,
         value: reading.uvIndexMaxToday,
-        label: { en: `Peak ${reading.uvIndexMaxToday}`, fr: `Pic ${reading.uvIndexMaxToday}` },
+        label: {
+          en: `Peak ${reading.uvIndexMaxToday}`,
+          fr: `Pic ${reading.uvIndexMaxToday}`,
+          de: `Höchstwert ${reading.uvIndexMaxToday}`,
+          es: `Pico ${reading.uvIndexMaxToday}`,
+        },
         color: levelColor(reading.levelMaxToday),
       },
     ];
@@ -139,26 +160,36 @@ export function buildLocationContent(location, reading) {
       type: 'text',
       variant: 'caption',
       text: stamp
-        ? { en: `${location.name} · updated ${stamp.en}`, fr: `${location.name} · màj ${stamp.fr}` }
-        : { en: location.name, fr: location.name },
+        ? {
+            en: `${location.name} · updated ${stamp.en}`,
+            fr: `${location.name} · màj ${stamp.fr}`,
+            de: `${location.name} · aktualisiert ${stamp.de}`,
+            es: `${location.name} · actualizado ${stamp.es}`,
+          }
+        : everywhere(location.name),
     },
     {
       type: 'value',
-      label: { en: 'UV index now', fr: 'Indice UV actuel' },
+      label: {
+        en: 'UV index now',
+        fr: 'Indice UV actuel',
+        de: 'UV-Index jetzt',
+        es: 'Índice UV ahora',
+      },
       value: reading.uvIndex ?? MISSING,
       icon: 'sun',
       color: levelColor(reading.level),
     },
     {
       type: 'value',
-      label: { en: 'Max today', fr: 'Max du jour' },
+      label: { en: 'Max today', fr: 'Max du jour', de: 'Tagesmax.', es: 'Máx. del día' },
       value: reading.uvIndexMaxToday ?? MISSING,
       icon: 'trending-up',
       color: levelColor(reading.levelMaxToday),
     },
     {
       type: 'value',
-      label: { en: 'Clear sky', fr: 'Ciel clair' },
+      label: { en: 'Clear sky', fr: 'Ciel clair', de: 'Klarer Himmel', es: 'Cielo despejado' },
       value: reading.uvIndexClearSky ?? MISSING,
       icon: 'cloud-off',
     },
@@ -172,17 +203,24 @@ export function buildLocationContent(location, reading) {
   const peakHour = formatHour(reading.peakTime);
   const items = [
     {
-      label: { en: 'Exposure', fr: 'Exposition' },
+      label: { en: 'Exposure', fr: 'Exposition', de: 'Belastung', es: 'Exposición' },
       value: levelLabel(reading.level),
       color: levelColor(reading.level),
     },
   ];
   if (peakHour !== null && reading.uvIndexMaxToday !== null) {
     items.push({
-      label: { en: "Today's peak", fr: 'Pic du jour' },
+      label: {
+        en: "Today's peak",
+        fr: 'Pic du jour',
+        de: 'Tageshöchstwert',
+        es: 'Pico del día',
+      },
       value: {
         en: `${reading.uvIndexMaxToday} at ${peakHour}`,
         fr: `${reading.uvIndexMaxToday} à ${peakHour}`,
+        de: `${reading.uvIndexMaxToday} um ${peakHour}`,
+        es: `${reading.uvIndexMaxToday} a las ${peakHour}`,
       },
       color: levelColor(reading.levelMaxToday),
     });
@@ -191,7 +229,7 @@ export function buildLocationContent(location, reading) {
 
   const advice = UV_LEVEL_ADVICE[reading.level];
   if (advice) {
-    components.push(bodyText(advice.en, advice.fr));
+    components.push(bodyText(advice));
   }
 
   return { ttl_seconds: WIDGET_TTL_SECONDS, components };
@@ -207,10 +245,12 @@ export function buildOverviewContent(entries) {
     return {
       ttl_seconds: WIDGET_TTL_SECONDS,
       components: [
-        bodyText(
-          'No location yet. Add one in the configuration of the UV index integration.',
-          "Aucun lieu pour l'instant. Ajoutez-en un dans la configuration de l'intégration Indice UV.",
-        ),
+        bodyText({
+          en: 'No location yet. Add one in the configuration of the UV index integration.',
+          fr: "Aucun lieu pour l'instant. Ajoutez-en un dans la configuration de l'intégration Indice UV.",
+          de: 'Noch kein Ort. Füge einen in der Konfiguration der Integration Indice UV hinzu.',
+          es: 'Todavía no hay ninguna ubicación. Añada una en la configuración de la integración Indice UV.',
+        }),
       ],
     };
   }
@@ -221,8 +261,15 @@ export function buildOverviewContent(entries) {
       ? {
           en: `Current UV index · first ${shown.length} of ${entries.length} locations`,
           fr: `Indice UV actuel · ${shown.length} premiers lieux sur ${entries.length}`,
+          de: `Aktueller UV-Index · erste ${shown.length} von ${entries.length} Orten`,
+          es: `Índice UV actual · primeras ${shown.length} de ${entries.length} ubicaciones`,
         }
-      : { en: 'Current UV index', fr: 'Indice UV actuel' };
+      : {
+          en: 'Current UV index',
+          fr: 'Indice UV actuel',
+          de: 'Aktueller UV-Index',
+          es: 'Índice UV actual',
+        };
 
   const items = shown.map(({ location, reading }) => {
     const value = reading?.uvIndex ?? null;
@@ -232,7 +279,7 @@ export function buildOverviewContent(entries) {
     const label = levelLabel(reading.level);
     return {
       label: location.name,
-      value: { en: `${value} · ${label.en}`, fr: `${value} · ${label.fr}` },
+      value: inEveryLanguage((language) => `${value} · ${label[language]}`),
       color: levelColor(reading.level),
     };
   });
@@ -265,10 +312,12 @@ export function createWidgets({ getConfig, watchedLocations, locationOfDevice, r
         return {
           ttl_seconds: WIDGET_TTL_SECONDS,
           components: [
-            bodyText(
-              'This device is no longer watched: its location was removed. Pick another device in the widget settings.',
-              "Cet appareil n'est plus suivi : son lieu a été supprimé. Choisissez un autre appareil dans les réglages du widget.",
-            ),
+            bodyText({
+              en: 'This device is no longer watched: its location was removed. Pick another device in the widget settings.',
+              fr: "Cet appareil n'est plus suivi : son lieu a été supprimé. Choisissez un autre appareil dans les réglages du widget.",
+              de: 'Dieses Gerät wird nicht mehr überwacht: Sein Ort wurde entfernt. Wähle in den Widget-Einstellungen ein anderes Gerät.',
+              es: 'Este dispositivo ya no se vigila: su ubicación se ha eliminado. Elija otro dispositivo en los ajustes del widget.',
+            }),
           ],
         };
       }

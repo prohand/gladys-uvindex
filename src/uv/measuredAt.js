@@ -21,7 +21,7 @@
 // and the wall-clock fields at its head are still the local time we want.
 // -----------------------------------------------------------------------------
 
-import { DEFAULT_LANGUAGE } from '../language.js';
+import { DEFAULT_LANGUAGE, inLanguage } from '../language.js';
 
 /** `YYYY-MM-DDTHH:MM`, with anything after the minutes ignored. */
 const LOCAL_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/;
@@ -43,6 +43,17 @@ export function parseMeasuredAt(value) {
 }
 
 /**
+ * How each language writes a timestamp down. English gets the ISO order — see
+ * `formatMeasuredAt` — and is the fallback of any other language.
+ */
+const TIMESTAMP_FORMATS = {
+  en: ({ year, month, day, hour, minute }) => `${year}-${month}-${day} ${hour}:${minute}`,
+  fr: ({ year, month, day, hour, minute }) => `${day}/${month}/${year} à ${hour}:${minute}`,
+  de: ({ year, month, day, hour, minute }) => `${day}.${month}.${year} um ${hour}:${minute}`,
+  es: ({ year, month, day, hour, minute }) => `${day}/${month}/${year} a las ${hour}:${minute}`,
+};
+
+/**
  * The timestamp as the TEXT state of a feature, in the language of the device.
  *
  * Written like a date is written in that language, and never ambiguously:
@@ -57,14 +68,11 @@ export function formatMeasuredAt(value, language = DEFAULT_LANGUAGE) {
   if (!parts) {
     return null;
   }
-  const { year, month, day, hour, minute } = parts;
-  return language === 'en'
-    ? `${year}-${month}-${day} ${hour}:${minute}`
-    : `${day}/${month}/${year} à ${hour}:${minute}`;
+  return inLanguage(TIMESTAMP_FORMATS, language)(parts);
 }
 
 /**
- * The hour alone, `HH:MM` — the same in both languages, which is why it takes
+ * The hour alone, `HH:MM` — the same in every language, which is why it takes
  * none: it is what "peak at 14:00" and "pic à 14:00" share.
  * @param {unknown} value a provider timestamp
  * @returns {string|null}

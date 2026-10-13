@@ -30,6 +30,8 @@ import { forgetStatus, holdStatus, releaseStatus, reportStatus } from './status.
 export const NOT_CONFIGURED_MESSAGE = {
   en: 'Add a location to start following the UV index.',
   fr: "Ajoutez un lieu pour suivre l'indice UV.",
+  de: 'Füge einen Ort hinzu, um den UV-Index zu verfolgen.',
+  es: 'Añada una ubicación para seguir el índice UV.',
 };
 
 /**
@@ -69,9 +71,7 @@ export function createRuntime(gladys, { blueprints = DEVICE_BLUEPRINTS } = {}) {
 
     try {
       const response = await gladys.publishDiscoveredDevices(devices);
-      logger.info(
-        `Published ${response?.count ?? devices.length} device(s) to the Discovery screen`,
-      );
+      logger.info(`Published ${response?.count ?? devices.length} device(s) to the Discover tab`);
       releaseStatus(gladys);
       return configured;
     } catch (err) {
@@ -84,6 +84,8 @@ export function createRuntime(gladys, { blueprints = DEVICE_BLUEPRINTS } = {}) {
       const message = {
         en: `Gladys refused the device: ${reason}`,
         fr: `Gladys a refusé l'appareil : ${reason}`,
+        de: `Gladys hat das Gerät abgelehnt: ${reason}`,
+        es: `Gladys ha rechazado el dispositivo: ${reason}`,
       };
       holdStatus(gladys, message);
       await reportStatus(gladys, false, message);
@@ -212,6 +214,8 @@ export function createRuntime(gladys, { blueprints = DEVICE_BLUEPRINTS } = {}) {
         await reportStatus(gladys, false, {
           en: `Initialization failed: ${reason}`,
           fr: `L'initialisation a échoué : ${reason}`,
+          de: `Initialisierung fehlgeschlagen: ${reason}`,
+          es: `La inicialización ha fallado: ${reason}`,
         });
       }
     },

@@ -4,7 +4,9 @@
   "name": "Indice UV",
   "description": {
     "en": "UV index for the locations you choose, from the Copernicus CAMS forecast.",
-    "fr": "Indice UV des lieux de votre choix, via la prévision CAMS de Copernicus."
+    "fr": "Indice UV des lieux de votre choix, via la prévision CAMS de Copernicus.",
+    "de": "UV-Index für die Orte deiner Wahl, aus der CAMS-Vorhersage von Copernicus.",
+    "es": "Índice UV de las ubicaciones que elija, según la previsión CAMS de Copernicus."
   },
   "version": "2.4.0",
   "docker_image": "ghcr.io/prohand/gladys-uvindex:2.4.0",
@@ -19,32 +21,42 @@
       "type": "section",
       "label": {
         "en": "How it works",
-        "fr": "Comment ça marche"
+        "fr": "Comment ça marche",
+        "de": "So funktioniert es",
+        "es": "Cómo funciona"
       },
       "description": {
-        "en": "Add a location with the button below: type its French postal code, it is resolved to a commune, and a UV device appears in the Discovery tab, ready to be added to Gladys. The UV index comes from the CAMS forecast (Copernicus), republished as open data by Open-Meteo, and postal codes are read through the French state's \"Découpage administratif\" API: no account and no API key are needed. Outside France, add a location by its latitude and longitude — the UV data itself is worldwide. Once a device is added, the dashboard offers two UV widgets and the scene editor a UV trigger and a UV action.",
-        "fr": "Ajoutez un lieu avec le bouton ci-dessous : saisissez son code postal, il est résolu en commune, puis un appareil UV apparaît dans l'onglet Découverte, prêt à être ajouté à Gladys. L'indice UV provient de la prévision CAMS (Copernicus), rediffusée en open data par Open-Meteo, et les codes postaux sont lus via l'API « Découpage administratif » de l'État : aucun compte ni clé d'API n'est nécessaire. Hors de France, ajoutez un lieu par sa latitude et sa longitude — les données UV sont mondiales. Une fois l'appareil ajouté, le tableau de bord propose deux widgets UV et l'éditeur de scènes un déclencheur et une action UV."
+        "en": "Add a location with the button below: type its French postal code, it is resolved to a commune, and a UV device appears in the Discover tab, ready to be added to Gladys. The UV index comes from the CAMS forecast (Copernicus), republished as open data by Open-Meteo, and postal codes are read through the French state's \"Découpage administratif\" API: no account and no API key are needed. Outside France, add a location by its latitude and longitude — the UV data itself is worldwide. Once a device is added, the dashboard offers two UV widgets and the scene editor a UV trigger and a UV action.",
+        "fr": "Ajoutez un lieu avec le bouton ci-dessous : saisissez son code postal, il est résolu en commune, puis un appareil UV apparaît dans l'onglet Découverte, prêt à être ajouté à Gladys. L'indice UV provient de la prévision CAMS (Copernicus), rediffusée en open data par Open-Meteo, et les codes postaux sont lus via l'API « Découpage administratif » de l'État : aucun compte ni clé d'API n'est nécessaire. Hors de France, ajoutez un lieu par sa latitude et sa longitude — les données UV sont mondiales. Une fois l'appareil ajouté, le tableau de bord propose deux widgets UV et l'éditeur de scènes un déclencheur et une action UV.",
+        "de": "Füge mit der Schaltfläche unten einen Ort hinzu: Gib seine französische Postleitzahl ein, sie wird einer Gemeinde zugeordnet, und ein UV-Gerät erscheint im Tab „Entdecken“, bereit, zu Gladys hinzugefügt zu werden. Der UV-Index stammt aus der CAMS-Vorhersage (Copernicus), die Open-Meteo als Open Data bereitstellt, und die Postleitzahlen werden über die API „Découpage administratif“ des französischen Staates gelesen: Es sind weder ein Konto noch ein API-Schlüssel nötig. Außerhalb Frankreichs fügst du einen Ort über seinen Breiten- und Längengrad hinzu — die UV-Daten selbst sind weltweit verfügbar. Sobald ein Gerät hinzugefügt ist, bietet das Dashboard zwei UV-Widgets und der Szeneneditor einen UV-Auslöser und eine UV-Aktion.",
+        "es": "Añada una ubicación con el botón de abajo: escriba su código postal francés, se asocia a un municipio y aparece un dispositivo UV en la pestaña «Descubrir», listo para añadirlo a Gladys. El índice UV procede de la previsión CAMS (Copernicus), redistribuida como datos abiertos por Open-Meteo, y los códigos postales se leen a través de la API «Découpage administratif» del Estado francés: no se necesita ninguna cuenta ni clave de API. Fuera de Francia, añada una ubicación por su latitud y su longitud: los datos UV son mundiales. Una vez añadido un dispositivo, el panel ofrece dos widgets UV y el editor de escenas un disparador y una acción UV."
       },
       "links": [
         {
           "url": "https://open-meteo.com/en/docs/air-quality-api",
           "label": {
             "en": "Open-Meteo Air Quality API",
-            "fr": "API Qualité de l'air Open-Meteo"
+            "fr": "API Qualité de l'air Open-Meteo",
+            "de": "Open-Meteo-Luftqualitäts-API",
+            "es": "API de calidad del aire de Open-Meteo"
           }
         },
         {
           "url": "https://geo.api.gouv.fr/decoupage-administratif/communes",
           "label": {
             "en": "API Découpage administratif (data.gouv.fr)",
-            "fr": "API Découpage administratif (data.gouv.fr)"
+            "fr": "API Découpage administratif (data.gouv.fr)",
+            "de": "API Découpage administratif (data.gouv.fr)",
+            "es": "API Découpage administratif (data.gouv.fr)"
           }
         },
         {
           "url": "https://www.who.int/news-room/questions-and-answers/item/radiation-the-ultraviolet-uv-index",
           "label": {
             "en": "WHO — the UV index scale",
-            "fr": "OMS — l'échelle de l'indice UV"
+            "fr": "OMS — l'échelle de l'indice UV",
+            "de": "WHO — die Skala des UV-Index",
+            "es": "OMS — la escala del índice UV"
           }
         }
       ]
@@ -54,11 +66,15 @@
       "type": "section",
       "label": {
         "en": "General settings",
-        "fr": "Réglages généraux"
+        "fr": "Réglages généraux",
+        "de": "Allgemeine Einstellungen",
+        "es": "Ajustes generales"
       },
       "description": {
         "en": "These settings apply to every configured location.",
-        "fr": "Ces réglages s'appliquent à tous les lieux configurés."
+        "fr": "Ces réglages s'appliquent à tous les lieux configurés.",
+        "de": "Diese Einstellungen gelten für alle konfigurierten Orte.",
+        "es": "Estos ajustes se aplican a todas las ubicaciones configuradas."
       }
     },
     {
@@ -66,11 +82,15 @@
       "type": "select",
       "label": {
         "en": "Language of the device names",
-        "fr": "Langue du nom des appareils"
+        "fr": "Langue du nom des appareils",
+        "de": "Sprache der Gerätenamen",
+        "es": "Idioma de los nombres de los dispositivos"
       },
       "description": {
-        "en": "The language the device and feature names are written in: \"Indice UV\" or \"UV index\". Everything else this integration displays already follows your Gladys language, but the name of a device and of its features is stored as it is published, so it has to be chosen here — as do the texts the UV scene cards hand to your scenes. A device already added to Gladys keeps the names it was created with: delete it and add it again from the Discovery tab to rename it.",
-        "fr": "La langue dans laquelle sont écrits les noms des appareils et de leurs fonctionnalités : « Indice UV » ou « UV index ». Tout le reste de ce que l'intégration affiche suit déjà la langue de votre compte Gladys, mais le nom d'un appareil et de ses fonctionnalités est enregistré tel qu'il est publié : il faut donc le choisir ici, comme les textes que les cartes de scène UV transmettent à vos scènes. Un appareil déjà ajouté à Gladys conserve les noms avec lesquels il a été créé : supprimez-le et rajoutez-le depuis l'onglet Découverte pour le renommer."
+        "en": "The language the device and feature names are written in: \"Indice UV\", \"UV index\", \"UV-Index\" or \"Índice UV\". Everything else this integration displays already follows your Gladys language, but the name of a device and of its features is stored as it is published, so it has to be chosen here — as do the texts the UV scene cards hand to your scenes. A device already added to Gladys keeps the names it was created with: delete it and add it again from the Discover tab to rename it.",
+        "fr": "La langue dans laquelle sont écrits les noms des appareils et de leurs fonctionnalités : « Indice UV », « UV index », « UV-Index » ou « Índice UV ». Tout le reste de ce que l'intégration affiche suit déjà la langue de votre compte Gladys, mais le nom d'un appareil et de ses fonctionnalités est enregistré tel qu'il est publié : il faut donc le choisir ici, comme les textes que les cartes de scène UV transmettent à vos scènes. Un appareil déjà ajouté à Gladys conserve les noms avec lesquels il a été créé : supprimez-le et rajoutez-le depuis l'onglet Découverte pour le renommer.",
+        "de": "Die Sprache, in der die Namen der Geräte und ihrer Funktionen geschrieben werden: „Indice UV“, „UV index“, „UV-Index“ oder „Índice UV“. Alles andere, was diese Integration anzeigt, folgt bereits deiner Gladys-Sprache, aber der Name eines Geräts und seiner Funktionen wird so gespeichert, wie er veröffentlicht wird, und muss daher hier gewählt werden — ebenso wie die Texte, die die UV-Szenenkarten an deine Szenen übergeben. Ein bereits zu Gladys hinzugefügtes Gerät behält die Namen, mit denen es erstellt wurde: Lösche es und füge es über den Tab „Entdecken“ erneut hinzu, um es umzubenennen.",
+        "es": "El idioma en el que se escriben los nombres de los dispositivos y de sus funciones: «Indice UV», «UV index», «UV-Index» o «Índice UV». Todo lo demás que muestra esta integración ya sigue el idioma de su cuenta de Gladys, pero el nombre de un dispositivo y de sus funciones se guarda tal como se publica, por lo que hay que elegirlo aquí, al igual que los textos que las tarjetas de escena UV transmiten a sus escenas. Un dispositivo ya añadido a Gladys conserva los nombres con los que se creó: elimínelo y vuelva a añadirlo desde la pestaña «Descubrir» para cambiarle el nombre."
       },
       "required": false,
       "default": "fr",
@@ -79,14 +99,36 @@
           "value": "fr",
           "label": {
             "en": "French",
-            "fr": "Français"
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
           }
         },
         {
           "value": "en",
           "label": {
             "en": "English",
-            "fr": "Anglais"
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
           }
         }
       ]
@@ -96,11 +138,15 @@
       "type": "number",
       "label": {
         "en": "Refresh interval (s)",
-        "fr": "Intervalle de rafraîchissement (s)"
+        "fr": "Intervalle de rafraîchissement (s)",
+        "de": "Aktualisierungsintervall (s)",
+        "es": "Intervalo de actualización (s)"
       },
       "description": {
         "en": "How often each location is refreshed, in seconds. The forecast has an hourly resolution, so there is nothing to gain from going much below half an hour.",
-        "fr": "Fréquence de rafraîchissement de chaque lieu, en secondes. La prévision est horaire : descendre nettement sous la demi-heure n'apporte rien."
+        "fr": "Fréquence de rafraîchissement de chaque lieu, en secondes. La prévision est horaire : descendre nettement sous la demi-heure n'apporte rien.",
+        "de": "Wie oft jeder Ort aktualisiert wird, in Sekunden. Die Vorhersage hat eine stündliche Auflösung: Deutlich unter einer halben Stunde zu gehen, bringt nichts.",
+        "es": "Con qué frecuencia se actualiza cada ubicación, en segundos. La previsión es horaria: bajar mucho de la media hora no aporta nada."
       },
       "required": false,
       "default": 1800,
@@ -112,11 +158,15 @@
       "type": "section",
       "label": {
         "en": "Your locations",
-        "fr": "Vos lieux"
+        "fr": "Vos lieux",
+        "de": "Deine Orte",
+        "es": "Sus ubicaciones"
       },
       "description": {
         "en": "Use the buttons below to add, list and remove your locations. \"Add my Gladys houses\" adds them all in one click, from the houses you already placed on the map in Gladys. They are not fields of this form: a list you build as you go cannot be one, so everything about them happens under a button, and the answer displayed there is what shows you the list.",
-        "fr": "Utilisez les boutons ci-dessous pour ajouter, lister et supprimer vos lieux. « Ajouter mes maisons Gladys » les ajoute tous en un clic, à partir des maisons que vous avez déjà placées sur la carte dans Gladys. Ce ne sont pas des champs de ce formulaire : une liste que l'on construit au fil de l'eau ne peut pas en être un, donc tout se passe sous un bouton et c'est la réponse affichée là qui vous montre la liste."
+        "fr": "Utilisez les boutons ci-dessous pour ajouter, lister et supprimer vos lieux. « Ajouter mes maisons Gladys » les ajoute tous en un clic, à partir des maisons que vous avez déjà placées sur la carte dans Gladys. Ce ne sont pas des champs de ce formulaire : une liste que l'on construit au fil de l'eau ne peut pas en être un, donc tout se passe sous un bouton et c'est la réponse affichée là qui vous montre la liste.",
+        "de": "Verwende die Schaltflächen unten, um deine Orte hinzuzufügen, aufzulisten und zu entfernen. „Meine Gladys-Zuhause hinzufügen“ fügt sie alle mit einem Klick hinzu, aus den Zuhause, die du in Gladys bereits auf der Karte platziert haben. Sie sind keine Felder dieses Formulars: Eine Liste, die nach und nach entsteht, kann keines sein. Daher geschieht alles unter einer Schaltfläche, und die dort angezeigte Antwort zeigt dir die Liste.",
+        "es": "Utilice los botones de abajo para añadir, listar y eliminar sus ubicaciones. «Añadir mis viviendas de Gladys» las añade todas con un clic, a partir de las viviendas que ya ha situado en el mapa en Gladys. No son campos de este formulario: una lista que se construye poco a poco no puede serlo, así que todo ocurre bajo un botón y es la respuesta mostrada allí la que le enseña la lista."
       }
     }
   ],
@@ -125,11 +175,15 @@
       "key": "add_location",
       "label": {
         "en": "Add a location",
-        "fr": "Ajouter un lieu"
+        "fr": "Ajouter un lieu",
+        "de": "Ort hinzufügen",
+        "es": "Añadir una ubicación"
       },
       "description": {
-        "en": "Resolves the French postal code you type into a commune and adds a location watching it. Fill the latitude and the longitude in instead to add a point directly, anywhere in the world. Its device then shows up in the Discovery tab, and \"Show my locations\" lists it.",
-        "fr": "Résout le code postal saisi en commune et ajoute un lieu qui la surveille. Renseignez plutôt la latitude et la longitude pour ajouter un point directement, partout dans le monde. Son appareil apparaît ensuite dans l'onglet Découverte, et « Afficher mes lieux » le liste."
+        "en": "Resolves the French postal code you type into a commune and adds a location watching it. Fill the latitude and the longitude in instead to add a point directly, anywhere in the world. Its device then shows up in the Discover tab, and \"Show my locations\" lists it.",
+        "fr": "Résout le code postal saisi en commune et ajoute un lieu qui la surveille. Renseignez plutôt la latitude et la longitude pour ajouter un point directement, partout dans le monde. Son appareil apparaît ensuite dans l'onglet Découverte, et « Afficher mes lieux » le liste.",
+        "de": "Ordnet die eingegebene französische Postleitzahl einer Gemeinde zu und fügt einen Ort hinzu, der sie überwacht. Gib stattdessen Breiten- und Längengrad ein, um direkt einen Punkt hinzuzufügen, überall auf der Welt. Sein Gerät erscheint dann im Tab „Entdecken“, und „Meine Orte anzeigen“ listet ihn auf.",
+        "es": "Asocia el código postal francés que escriba a un municipio y añade una ubicación que lo vigila. Rellene en su lugar la latitud y la longitud para añadir un punto directamente, en cualquier parte del mundo. Su dispositivo aparece después en la pestaña «Descubrir», y «Mostrar mis ubicaciones» la lista."
       },
       "timeout_seconds": 30,
       "fields": [
@@ -138,16 +192,22 @@
           "type": "string",
           "label": {
             "en": "Location name",
-            "fr": "Nom du lieu"
+            "fr": "Nom du lieu",
+            "de": "Name des Orts",
+            "es": "Nombre de la ubicación"
           },
           "description": {
             "en": "Optional: the name of the commune found is used when left empty.",
-            "fr": "Facultatif : le nom de la commune trouvée est utilisé si vous le laissez vide."
+            "fr": "Facultatif : le nom de la commune trouvée est utilisé si vous le laissez vide.",
+            "de": "Optional: Bleibt das Feld leer, wird der Name der gefundenen Gemeinde verwendet.",
+            "es": "Opcional: si lo deja vacío, se usa el nombre del municipio encontrado."
           },
           "required": false,
           "placeholder": {
             "en": "Home",
-            "fr": "Maison"
+            "fr": "Maison",
+            "de": "Zuhause",
+            "es": "Casa"
           }
         },
         {
@@ -155,16 +215,22 @@
           "type": "string",
           "label": {
             "en": "Postal code",
-            "fr": "Code postal"
+            "fr": "Code postal",
+            "de": "Postleitzahl",
+            "es": "Código postal"
           },
           "description": {
             "en": "The French postal code of the place to watch: five digits. Optional if you fill the two coordinates in below.",
-            "fr": "Le code postal français du lieu à surveiller : cinq chiffres. Facultatif si vous renseignez les deux coordonnées ci-dessous."
+            "fr": "Le code postal français du lieu à surveiller : cinq chiffres. Facultatif si vous renseignez les deux coordonnées ci-dessous.",
+            "de": "Die französische Postleitzahl des zu überwachenden Orts: fünf Ziffern. Optional, wenn du unten die beiden Koordinaten eingibst.",
+            "es": "El código postal francés del lugar que se va a vigilar: cinco cifras. Opcional si rellena las dos coordenadas de abajo."
           },
           "required": false,
           "placeholder": {
             "en": "44300",
-            "fr": "44300"
+            "fr": "44300",
+            "de": "44300",
+            "es": "44300"
           }
         },
         {
@@ -172,16 +238,22 @@
           "type": "string",
           "label": {
             "en": "Commune (optional)",
-            "fr": "Commune (facultatif)"
+            "fr": "Commune (facultatif)",
+            "de": "Gemeinde (optional)",
+            "es": "Municipio (opcional)"
           },
           "description": {
             "en": "Only needed when the postal code covers several communes — 01000 is Bourg-en-Bresse, Péronnas and Saint-Denis-lès-Bourg. Run the action without it first: the answer lists the communes to choose from.",
-            "fr": "Utile seulement si le code postal couvre plusieurs communes — 01000 désigne Bourg-en-Bresse, Péronnas et Saint-Denis-lès-Bourg. Lancez d'abord l'action sans le renseigner : la réponse liste les communes possibles."
+            "fr": "Utile seulement si le code postal couvre plusieurs communes — 01000 désigne Bourg-en-Bresse, Péronnas et Saint-Denis-lès-Bourg. Lancez d'abord l'action sans le renseigner : la réponse liste les communes possibles.",
+            "de": "Nur nötig, wenn die Postleitzahl mehrere Gemeinden umfasst — 01000 steht für Bourg-en-Bresse, Péronnas und Saint-Denis-lès-Bourg. Führe die Aktion zuerst ohne dieses Feld aus: Die Antwort listet die möglichen Gemeinden auf.",
+            "es": "Solo es necesario si el código postal abarca varios municipios: 01000 corresponde a Bourg-en-Bresse, Péronnas y Saint-Denis-lès-Bourg. Ejecute primero la acción sin rellenarlo: la respuesta lista los municipios posibles."
           },
           "required": false,
           "placeholder": {
             "en": "Bourg-en-Bresse",
-            "fr": "Bourg-en-Bresse"
+            "fr": "Bourg-en-Bresse",
+            "de": "Bourg-en-Bresse",
+            "es": "Bourg-en-Bresse"
           }
         },
         {
@@ -189,16 +261,22 @@
           "type": "string",
           "label": {
             "en": "Latitude (optional)",
-            "fr": "Latitude (facultatif)"
+            "fr": "Latitude (facultatif)",
+            "de": "Breitengrad (optional)",
+            "es": "Latitud (opcional)"
           },
           "description": {
             "en": "WGS-84 decimal degrees, -90 to 90. Filled in together with the longitude, this point is used as it is and the postal code above is then only a label — this is the way in for a place outside France.",
-            "fr": "Degrés décimaux WGS-84, de -90 à 90. Renseignée avec la longitude, ce point est utilisé tel quel et le code postal ci-dessus ne sert plus que de libellé — c'est la voie d'entrée pour un lieu hors de France."
+            "fr": "Degrés décimaux WGS-84, de -90 à 90. Renseignée avec la longitude, ce point est utilisé tel quel et le code postal ci-dessus ne sert plus que de libellé — c'est la voie d'entrée pour un lieu hors de France.",
+            "de": "Dezimalgrad WGS-84, von -90 bis 90. Zusammen mit dem Längengrad angegeben, wird dieser Punkt unverändert verwendet und die Postleitzahl oben dient nur noch als Bezeichnung — so fügst du einen Ort außerhalb Frankreichs hinzu.",
+            "es": "Grados decimales WGS-84, de -90 a 90. Si se rellena junto con la longitud, este punto se usa tal cual y el código postal de arriba ya solo sirve de etiqueta: es la forma de añadir un lugar fuera de Francia."
           },
           "required": false,
           "placeholder": {
             "en": "48.8566",
-            "fr": "48,8566"
+            "fr": "48,8566",
+            "de": "48,8566",
+            "es": "48,8566"
           }
         },
         {
@@ -206,16 +284,22 @@
           "type": "string",
           "label": {
             "en": "Longitude (optional)",
-            "fr": "Longitude (facultatif)"
+            "fr": "Longitude (facultatif)",
+            "de": "Längengrad (optional)",
+            "es": "Longitud (opcional)"
           },
           "description": {
             "en": "WGS-84 decimal degrees, -180 to 180. Both coordinates go together: one alone is not a point.",
-            "fr": "Degrés décimaux WGS-84, de -180 à 180. Les deux coordonnées vont ensemble : une seule ne fait pas un point."
+            "fr": "Degrés décimaux WGS-84, de -180 à 180. Les deux coordonnées vont ensemble : une seule ne fait pas un point.",
+            "de": "Dezimalgrad WGS-84, von -180 bis 180. Beide Koordinaten gehören zusammen: Eine allein ergibt keinen Punkt.",
+            "es": "Grados decimales WGS-84, de -180 a 180. Las dos coordenadas van juntas: una sola no forma un punto."
           },
           "required": false,
           "placeholder": {
             "en": "2.3522",
-            "fr": "2,3522"
+            "fr": "2,3522",
+            "de": "2,3522",
+            "es": "2,3522"
           }
         }
       ]
@@ -224,11 +308,15 @@
       "key": "import_houses",
       "label": {
         "en": "Add my Gladys houses",
-        "fr": "Ajouter mes maisons Gladys"
+        "fr": "Ajouter mes maisons Gladys",
+        "de": "Meine Gladys-Zuhause hinzufügen",
+        "es": "Añadir mis viviendas de Gladys"
       },
       "description": {
         "en": "Reads the houses you configured in Gladys and adds a location for each one that is not watched yet — no postal code to type. Pick a house to add that one only, or leave the field empty to add them all. A house you never placed on the map has no coordinates: locate it in Settings > Houses first. The houses are read once, when you click: a location added this way is an ordinary one, which you rename and remove like the others.",
-        "fr": "Lit les maisons que vous avez configurées dans Gladys et ajoute un lieu pour chacune qui n'est pas déjà surveillée — aucun code postal à saisir. Choisissez une maison pour n'ajouter qu'elle, ou laissez le champ vide pour les ajouter toutes. Une maison jamais placée sur la carte n'a pas de coordonnées : localisez-la d'abord dans Réglages > Maisons. Les maisons sont lues une fois, au clic : un lieu ajouté ainsi est un lieu ordinaire, que vous renommez et supprimez comme les autres."
+        "fr": "Lit les maisons que vous avez configurées dans Gladys et ajoute un lieu pour chacune qui n'est pas déjà surveillée — aucun code postal à saisir. Choisissez une maison pour n'ajouter qu'elle, ou laissez le champ vide pour les ajouter toutes. Une maison jamais placée sur la carte n'a pas de coordonnées : localisez-la d'abord dans Réglages > Maisons. Les maisons sont lues une fois, au clic : un lieu ajouté ainsi est un lieu ordinaire, que vous renommez et supprimez comme les autres.",
+        "de": "Liest die in Gladys konfigurierten Zuhause und fügt für jedes, das noch nicht überwacht wird, einen Ort hinzu — ohne Postleitzahl einzugeben. Wähle ein Zuhause, um nur dieses hinzuzufügen, oder lass das Feld leer, um alle hinzuzufügen. Ein Zuhause, das nie auf der Karte platziert wurde, hat keine Koordinaten: Verorte es zuerst unter Einstellungen > Zuhause. Die Zuhause werden einmal gelesen, beim Klick: Ein so hinzugefügter Ort ist ein gewöhnlicher Ort, den du wie die anderen umbenennst und entfernst.",
+        "es": "Lee las viviendas que ha configurado en Gladys y añade una ubicación por cada una que aún no se vigila, sin código postal que escribir. Elija una vivienda para añadir solo esa, o deje el campo vacío para añadirlas todas. Una vivienda que nunca se situó en el mapa no tiene coordenadas: ubíquela primero en Configuración > Viviendas. Las viviendas se leen una vez, al hacer clic: una ubicación añadida así es una ubicación normal, que se renombra y elimina como las demás."
       },
       "timeout_seconds": 30,
       "fields": [
@@ -238,11 +326,15 @@
           "source": "houses",
           "label": {
             "en": "House (optional)",
-            "fr": "Maison (facultatif)"
+            "fr": "Maison (facultatif)",
+            "de": "Zuhause (optional)",
+            "es": "Vivienda (opcional)"
           },
           "description": {
             "en": "Leave empty to add every Gladys house.",
-            "fr": "Laissez vide pour ajouter toutes les maisons Gladys."
+            "fr": "Laissez vide pour ajouter toutes les maisons Gladys.",
+            "de": "Leer lassen, um alle Gladys-Zuhause hinzuzufügen.",
+            "es": "Déjelo vacío para añadir todas las viviendas de Gladys."
           },
           "required": false
         }
@@ -252,11 +344,15 @@
       "key": "list_locations",
       "label": {
         "en": "Show my locations",
-        "fr": "Afficher mes lieux"
+        "fr": "Afficher mes lieux",
+        "de": "Meine Orte anzeigen",
+        "es": "Mostrar mis ubicaciones"
       },
       "description": {
         "en": "Lists every configured location: name, postal code, commune and coordinates. Each entry opens with a \"•\" and its number — the numbers the deletion dropdown offers.",
-        "fr": "Liste tous les lieux configurés : nom, code postal, commune et coordonnées. Chaque entrée commence par « • » et son numéro — les numéros que propose la liste déroulante de la suppression."
+        "fr": "Liste tous les lieux configurés : nom, code postal, commune et coordonnées. Chaque entrée commence par « • » et son numéro — les numéros que propose la liste déroulante de la suppression.",
+        "de": "Listet alle konfigurierten Orte auf: Name, Postleitzahl, Gemeinde und Koordinaten. Jeder Eintrag beginnt mit „•“ und seiner Nummer — den Nummern, die die Auswahlliste zum Entfernen anbietet.",
+        "es": "Lista todas las ubicaciones configuradas: nombre, código postal, municipio y coordenadas. Cada entrada empieza por «•» y su número, los números que ofrece la lista desplegable de eliminación."
       },
       "timeout_seconds": 15
     },
@@ -264,11 +360,15 @@
       "key": "test_provider",
       "label": {
         "en": "Test the UV provider (all locations)",
-        "fr": "Tester le fournisseur UV (tous les lieux)"
+        "fr": "Tester le fournisseur UV (tous les lieux)",
+        "de": "UV-Anbieter testen (alle Orte)",
+        "es": "Probar el proveedor UV (todas las ubicaciones)"
       },
       "description": {
         "en": "Reads the forecast for every location and shows its UV index, in the format of \"Show my locations\": each entry opens with a \"•\" and its number.",
-        "fr": "Lit la prévision de chaque lieu et affiche son indice UV, au format d'« Afficher mes lieux » : chaque entrée commence par « • » et son numéro."
+        "fr": "Lit la prévision de chaque lieu et affiche son indice UV, au format d'« Afficher mes lieux » : chaque entrée commence par « • » et son numéro.",
+        "de": "Liest die Vorhersage für jeden Ort und zeigt seinen UV-Index an, im Format von „Meine Orte anzeigen“: Jeder Eintrag beginnt mit „•“ und seiner Nummer.",
+        "es": "Lee la previsión de cada ubicación y muestra su índice UV, con el formato de «Mostrar mis ubicaciones»: cada entrada empieza por «•» y su número."
       },
       "timeout_seconds": 60
     },
@@ -276,11 +376,15 @@
       "key": "remove_location",
       "label": {
         "en": "Remove a location",
-        "fr": "Supprimer un lieu"
+        "fr": "Supprimer un lieu",
+        "de": "Ort entfernen",
+        "es": "Eliminar una ubicación"
       },
       "description": {
         "en": "Stops watching the location whose number you pick here — the numbers are the ones \"Show my locations\" lists. Its Gladys device is not deleted (an integration cannot do that): delete it yourself if you no longer want it.",
-        "fr": "Arrête de surveiller le lieu dont vous choisissez le numéro ici — ce sont les numéros qu'affiche « Afficher mes lieux ». Son appareil Gladys n'est pas supprimé (une intégration ne peut pas le faire) : supprimez-le vous-même si vous n'en voulez plus."
+        "fr": "Arrête de surveiller le lieu dont vous choisissez le numéro ici — ce sont les numéros qu'affiche « Afficher mes lieux ». Son appareil Gladys n'est pas supprimé (une intégration ne peut pas le faire) : supprimez-le vous-même si vous n'en voulez plus.",
+        "de": "Beendet die Überwachung des Orts, dessen Nummer du hier wählst — es sind die Nummern, die „Meine Orte anzeigen“ auflistet. Sein Gladys-Gerät wird nicht gelöscht (das kann eine Integration nicht): Lösche es selbst, wenn du es nicht mehr möchtest.",
+        "es": "Deja de vigilar la ubicación cuyo número elija aquí; son los números que lista «Mostrar mis ubicaciones». Su dispositivo de Gladys no se elimina (una integración no puede hacerlo): elimínelo usted mismo si ya no lo quiere."
       },
       "timeout_seconds": 15,
       "fields": [
@@ -289,11 +393,15 @@
           "type": "select",
           "label": {
             "en": "Location to remove",
-            "fr": "Lieu à supprimer"
+            "fr": "Lieu à supprimer",
+            "de": "Zu entfernender Ort",
+            "es": "Ubicación que se va a eliminar"
           },
           "description": {
             "en": "The number of the location to remove, as \"Show my locations\" numbers them.",
-            "fr": "Le numéro du lieu à supprimer, tel qu'« Afficher mes lieux » les numérote."
+            "fr": "Le numéro du lieu à supprimer, tel qu'« Afficher mes lieux » les numérote.",
+            "de": "Die Nummer des zu entfernenden Orts, so wie „Meine Orte anzeigen“ sie nummeriert.",
+            "es": "El número de la ubicación que se va a eliminar, tal como los numera «Mostrar mis ubicaciones»."
           },
           "required": true,
           "default": "1",
@@ -302,140 +410,180 @@
               "value": "1",
               "label": {
                 "en": "Location 1",
-                "fr": "Lieu 1"
+                "fr": "Lieu 1",
+                "de": "Ort 1",
+                "es": "Ubicación 1"
               }
             },
             {
               "value": "2",
               "label": {
                 "en": "Location 2",
-                "fr": "Lieu 2"
+                "fr": "Lieu 2",
+                "de": "Ort 2",
+                "es": "Ubicación 2"
               }
             },
             {
               "value": "3",
               "label": {
                 "en": "Location 3",
-                "fr": "Lieu 3"
+                "fr": "Lieu 3",
+                "de": "Ort 3",
+                "es": "Ubicación 3"
               }
             },
             {
               "value": "4",
               "label": {
                 "en": "Location 4",
-                "fr": "Lieu 4"
+                "fr": "Lieu 4",
+                "de": "Ort 4",
+                "es": "Ubicación 4"
               }
             },
             {
               "value": "5",
               "label": {
                 "en": "Location 5",
-                "fr": "Lieu 5"
+                "fr": "Lieu 5",
+                "de": "Ort 5",
+                "es": "Ubicación 5"
               }
             },
             {
               "value": "6",
               "label": {
                 "en": "Location 6",
-                "fr": "Lieu 6"
+                "fr": "Lieu 6",
+                "de": "Ort 6",
+                "es": "Ubicación 6"
               }
             },
             {
               "value": "7",
               "label": {
                 "en": "Location 7",
-                "fr": "Lieu 7"
+                "fr": "Lieu 7",
+                "de": "Ort 7",
+                "es": "Ubicación 7"
               }
             },
             {
               "value": "8",
               "label": {
                 "en": "Location 8",
-                "fr": "Lieu 8"
+                "fr": "Lieu 8",
+                "de": "Ort 8",
+                "es": "Ubicación 8"
               }
             },
             {
               "value": "9",
               "label": {
                 "en": "Location 9",
-                "fr": "Lieu 9"
+                "fr": "Lieu 9",
+                "de": "Ort 9",
+                "es": "Ubicación 9"
               }
             },
             {
               "value": "10",
               "label": {
                 "en": "Location 10",
-                "fr": "Lieu 10"
+                "fr": "Lieu 10",
+                "de": "Ort 10",
+                "es": "Ubicación 10"
               }
             },
             {
               "value": "11",
               "label": {
                 "en": "Location 11",
-                "fr": "Lieu 11"
+                "fr": "Lieu 11",
+                "de": "Ort 11",
+                "es": "Ubicación 11"
               }
             },
             {
               "value": "12",
               "label": {
                 "en": "Location 12",
-                "fr": "Lieu 12"
+                "fr": "Lieu 12",
+                "de": "Ort 12",
+                "es": "Ubicación 12"
               }
             },
             {
               "value": "13",
               "label": {
                 "en": "Location 13",
-                "fr": "Lieu 13"
+                "fr": "Lieu 13",
+                "de": "Ort 13",
+                "es": "Ubicación 13"
               }
             },
             {
               "value": "14",
               "label": {
                 "en": "Location 14",
-                "fr": "Lieu 14"
+                "fr": "Lieu 14",
+                "de": "Ort 14",
+                "es": "Ubicación 14"
               }
             },
             {
               "value": "15",
               "label": {
                 "en": "Location 15",
-                "fr": "Lieu 15"
+                "fr": "Lieu 15",
+                "de": "Ort 15",
+                "es": "Ubicación 15"
               }
             },
             {
               "value": "16",
               "label": {
                 "en": "Location 16",
-                "fr": "Lieu 16"
+                "fr": "Lieu 16",
+                "de": "Ort 16",
+                "es": "Ubicación 16"
               }
             },
             {
               "value": "17",
               "label": {
                 "en": "Location 17",
-                "fr": "Lieu 17"
+                "fr": "Lieu 17",
+                "de": "Ort 17",
+                "es": "Ubicación 17"
               }
             },
             {
               "value": "18",
               "label": {
                 "en": "Location 18",
-                "fr": "Lieu 18"
+                "fr": "Lieu 18",
+                "de": "Ort 18",
+                "es": "Ubicación 18"
               }
             },
             {
               "value": "19",
               "label": {
                 "en": "Location 19",
-                "fr": "Lieu 19"
+                "fr": "Lieu 19",
+                "de": "Ort 19",
+                "es": "Ubicación 19"
               }
             },
             {
               "value": "20",
               "label": {
                 "en": "Location 20",
-                "fr": "Lieu 20"
+                "fr": "Lieu 20",
+                "de": "Ort 20",
+                "es": "Ubicación 20"
               }
             }
           ]
@@ -445,11 +593,15 @@
           "type": "boolean",
           "label": {
             "en": "I confirm the deletion",
-            "fr": "Je confirme la suppression"
+            "fr": "Je confirme la suppression",
+            "de": "Ich bestätige das Entfernen",
+            "es": "Confirmo la eliminación"
           },
           "description": {
             "en": "Run the action once unchecked to see which location would be removed.",
-            "fr": "Lancez l'action une fois sans cocher pour voir quel lieu serait supprimé."
+            "fr": "Lancez l'action une fois sans cocher pour voir quel lieu serait supprimé.",
+            "de": "Führe die Aktion einmal ohne Häkchen aus, um zu sehen, welcher Ort entfernt würde.",
+            "es": "Ejecute la acción una vez sin marcar la casilla para ver qué ubicación se eliminaría."
           },
           "required": false,
           "default": false
@@ -462,11 +614,15 @@
       "key": "uv_location",
       "label": {
         "en": "UV index of a location",
-        "fr": "Indice UV d'un lieu"
+        "fr": "Indice UV d'un lieu",
+        "de": "UV-Index eines Orts",
+        "es": "Índice UV de una ubicación"
       },
       "description": {
         "en": "The UV index now, today's peak and forecast curve, and the advice for one location.",
-        "fr": "L'indice UV actuel, le pic et la courbe du jour, et le conseil pour un lieu."
+        "fr": "L'indice UV actuel, le pic et la courbe du jour, et le conseil pour un lieu.",
+        "de": "Der aktuelle UV-Index, Tageshöchstwert und Vorhersagekurve sowie die Empfehlung für einen Ort.",
+        "es": "El índice UV actual, el pico y la curva del día, y el consejo para una ubicación."
       },
       "icon": "sun",
       "settings": [
@@ -476,11 +632,15 @@
           "source": "devices",
           "label": {
             "en": "Location",
-            "fr": "Lieu"
+            "fr": "Lieu",
+            "de": "Ort",
+            "es": "Ubicación"
           },
           "description": {
             "en": "The UV device of the location to show. Only the devices already added to Gladys are listed.",
-            "fr": "L'appareil UV du lieu à afficher. Seuls les appareils déjà ajoutés à Gladys sont proposés."
+            "fr": "L'appareil UV du lieu à afficher. Seuls les appareils déjà ajoutés à Gladys sont proposés.",
+            "de": "Das UV-Gerät des anzuzeigenden Orts. Nur die bereits zu Gladys hinzugefügten Geräte werden aufgelistet.",
+            "es": "El dispositivo UV de la ubicación que se va a mostrar. Solo se proponen los dispositivos ya añadidos a Gladys."
           },
           "required": true
         }
@@ -490,11 +650,15 @@
       "key": "uv_overview",
       "label": {
         "en": "UV index of all locations",
-        "fr": "Indice UV de tous les lieux"
+        "fr": "Indice UV de tous les lieux",
+        "de": "UV-Index aller Orte",
+        "es": "Índice UV de las ubicaciones"
       },
       "description": {
         "en": "The current UV index and exposure level of every location, one row each.",
-        "fr": "L'indice UV actuel et le niveau d'exposition de chaque lieu, une ligne par lieu."
+        "fr": "L'indice UV actuel et le niveau d'exposition de chaque lieu, une ligne par lieu.",
+        "de": "Der aktuelle UV-Index und die Belastungsstufe jedes Orts, eine Zeile pro Ort.",
+        "es": "El índice UV actual y el nivel de exposición de cada ubicación, una fila por ubicación."
       },
       "icon": "sun"
     }
@@ -504,11 +668,15 @@
       "key": "exposure_level_changed",
       "label": {
         "en": "UV exposure level changed",
-        "fr": "Niveau d'exposition UV changé"
+        "fr": "Niveau d'exposition UV changé",
+        "de": "UV-Belastungsstufe geändert",
+        "es": "Nivel de exposición UV cambiado"
       },
       "description": {
         "en": "The UV exposure level of a location moved to another band (0 None to 5 Extreme).",
-        "fr": "Le niveau d'exposition UV d'un lieu est passé dans une autre tranche (0 Nul à 5 Extrême)."
+        "fr": "Le niveau d'exposition UV d'un lieu est passé dans une autre tranche (0 Nul à 5 Extrême).",
+        "de": "Die UV-Belastungsstufe eines Orts ist in einen anderen Bereich gewechselt (0 Keine bis 5 Extrem).",
+        "es": "El nivel de exposición UV de una ubicación ha pasado a otro tramo (de 0 Nulo a 5 Extremo)."
       },
       "fields": [
         {
@@ -517,11 +685,15 @@
           "source": "devices",
           "label": {
             "en": "Location",
-            "fr": "Lieu"
+            "fr": "Lieu",
+            "de": "Ort",
+            "es": "Ubicación"
           },
           "description": {
             "en": "Leave empty to react to every location.",
-            "fr": "Laissez vide pour réagir à tous les lieux."
+            "fr": "Laissez vide pour réagir à tous les lieux.",
+            "de": "Leer lassen, um auf alle Orte zu reagieren.",
+            "es": "Déjelo vacío para reaccionar a todas las ubicaciones."
           }
         },
         {
@@ -529,53 +701,69 @@
           "type": "multi_select",
           "label": {
             "en": "New level",
-            "fr": "Nouveau niveau"
+            "fr": "Nouveau niveau",
+            "de": "Neue Stufe",
+            "es": "Nuevo nivel"
           },
           "description": {
             "en": "The level just reached. Leave empty for any level.",
-            "fr": "Le niveau qui vient d'être atteint. Laissez vide pour n'importe quel niveau."
+            "fr": "Le niveau qui vient d'être atteint. Laissez vide pour n'importe quel niveau.",
+            "de": "Die gerade erreichte Stufe. Leer lassen für jede Stufe.",
+            "es": "El nivel que se acaba de alcanzar. Déjelo vacío para cualquier nivel."
           },
           "options": [
             {
               "value": "0",
               "label": {
                 "en": "0 — None",
-                "fr": "0 — Nul"
+                "fr": "0 — Nul",
+                "de": "0 — Keine",
+                "es": "0 — Nulo"
               }
             },
             {
               "value": "1",
               "label": {
                 "en": "1 — Low",
-                "fr": "1 — Faible"
+                "fr": "1 — Faible",
+                "de": "1 — Niedrig",
+                "es": "1 — Bajo"
               }
             },
             {
               "value": "2",
               "label": {
                 "en": "2 — Moderate",
-                "fr": "2 — Modéré"
+                "fr": "2 — Modéré",
+                "de": "2 — Mäßig",
+                "es": "2 — Moderado"
               }
             },
             {
               "value": "3",
               "label": {
                 "en": "3 — High",
-                "fr": "3 — Élevé"
+                "fr": "3 — Élevé",
+                "de": "3 — Hoch",
+                "es": "3 — Alto"
               }
             },
             {
               "value": "4",
               "label": {
                 "en": "4 — Very high",
-                "fr": "4 — Très élevé"
+                "fr": "4 — Très élevé",
+                "de": "4 — Sehr hoch",
+                "es": "4 — Muy alto"
               }
             },
             {
               "value": "5",
               "label": {
                 "en": "5 — Extreme",
-                "fr": "5 — Extrême"
+                "fr": "5 — Extrême",
+                "de": "5 — Extrem",
+                "es": "5 — Extremo"
               }
             }
           ]
@@ -585,25 +773,33 @@
           "type": "select",
           "label": {
             "en": "Direction",
-            "fr": "Sens"
+            "fr": "Sens",
+            "de": "Richtung",
+            "es": "Sentido"
           },
           "description": {
             "en": "Leave empty for both.",
-            "fr": "Laissez vide pour les deux."
+            "fr": "Laissez vide pour les deux.",
+            "de": "Leer lassen für beide.",
+            "es": "Déjelo vacío para ambos."
           },
           "options": [
             {
               "value": "rising",
               "label": {
                 "en": "Rising",
-                "fr": "En hausse"
+                "fr": "En hausse",
+                "de": "Steigend",
+                "es": "En aumento"
               }
             },
             {
               "value": "falling",
               "label": {
                 "en": "Falling",
-                "fr": "En baisse"
+                "fr": "En baisse",
+                "de": "Fallend",
+                "es": "En descenso"
               }
             }
           ]
@@ -615,7 +811,9 @@
           "type": "string",
           "label": {
             "en": "Location name",
-            "fr": "Nom du lieu"
+            "fr": "Nom du lieu",
+            "de": "Name des Orts",
+            "es": "Nombre de la ubicación"
           }
         },
         {
@@ -623,7 +821,9 @@
           "type": "number",
           "label": {
             "en": "New level (0-5)",
-            "fr": "Nouveau niveau (0-5)"
+            "fr": "Nouveau niveau (0-5)",
+            "de": "Neue Stufe (0-5)",
+            "es": "Nuevo nivel (0-5)"
           }
         },
         {
@@ -631,7 +831,9 @@
           "type": "string",
           "label": {
             "en": "New level (text)",
-            "fr": "Nouveau niveau (texte)"
+            "fr": "Nouveau niveau (texte)",
+            "de": "Neue Stufe (Text)",
+            "es": "Nuevo nivel (texto)"
           }
         },
         {
@@ -639,7 +841,9 @@
           "type": "number",
           "label": {
             "en": "Previous level (0-5)",
-            "fr": "Niveau précédent (0-5)"
+            "fr": "Niveau précédent (0-5)",
+            "de": "Vorherige Stufe (0-5)",
+            "es": "Nivel anterior (0-5)"
           }
         },
         {
@@ -647,7 +851,9 @@
           "type": "string",
           "label": {
             "en": "Previous level (text)",
-            "fr": "Niveau précédent (texte)"
+            "fr": "Niveau précédent (texte)",
+            "de": "Vorherige Stufe (Text)",
+            "es": "Nivel anterior (texto)"
           }
         },
         {
@@ -655,7 +861,9 @@
           "type": "string",
           "label": {
             "en": "Direction (rising or falling)",
-            "fr": "Sens (rising ou falling)"
+            "fr": "Sens (rising ou falling)",
+            "de": "Richtung (rising oder falling)",
+            "es": "Sentido (rising o falling)"
           }
         },
         {
@@ -663,7 +871,9 @@
           "type": "string",
           "label": {
             "en": "Sun protection advice",
-            "fr": "Conseil de protection solaire"
+            "fr": "Conseil de protection solaire",
+            "de": "Sonnenschutz-Empfehlung",
+            "es": "Consejo de protección solar"
           }
         },
         {
@@ -671,7 +881,9 @@
           "type": "number",
           "label": {
             "en": "UV index",
-            "fr": "Indice UV"
+            "fr": "Indice UV",
+            "de": "UV-Index",
+            "es": "Índice UV"
           }
         },
         {
@@ -679,7 +891,9 @@
           "type": "string",
           "label": {
             "en": "Data updated at",
-            "fr": "Données mises à jour le"
+            "fr": "Données mises à jour le",
+            "de": "Daten aktualisiert am",
+            "es": "Datos actualizados el"
           }
         }
       ]
@@ -690,11 +904,15 @@
       "key": "read_uv_index",
       "label": {
         "en": "Read the UV index",
-        "fr": "Lire l'indice UV"
+        "fr": "Lire l'indice UV",
+        "de": "UV-Index lesen",
+        "es": "Leer el índice UV"
       },
       "description": {
         "en": "Reads a location's UV index now and hands its values to the next actions of the scene.",
-        "fr": "Lit l'indice UV d'un lieu maintenant et passe ses valeurs aux actions suivantes de la scène."
+        "fr": "Lit l'indice UV d'un lieu maintenant et passe ses valeurs aux actions suivantes de la scène.",
+        "de": "Liest jetzt den UV-Index eines Orts und übergibt seine Werte an die nächsten Aktionen der Szene.",
+        "es": "Lee ahora el índice UV de una ubicación y pasa sus valores a las siguientes acciones de la escena."
       },
       "timeout_seconds": 30,
       "fields": [
@@ -704,11 +922,15 @@
           "source": "devices",
           "label": {
             "en": "Location",
-            "fr": "Lieu"
+            "fr": "Lieu",
+            "de": "Ort",
+            "es": "Ubicación"
           },
           "description": {
             "en": "The UV device of the location to read.",
-            "fr": "L'appareil UV du lieu à lire."
+            "fr": "L'appareil UV du lieu à lire.",
+            "de": "Das UV-Gerät des zu lesenden Orts.",
+            "es": "El dispositivo UV de la ubicación que se va a leer."
           },
           "required": true
         }
@@ -719,7 +941,9 @@
           "type": "string",
           "label": {
             "en": "Location name",
-            "fr": "Nom du lieu"
+            "fr": "Nom du lieu",
+            "de": "Name des Orts",
+            "es": "Nombre de la ubicación"
           }
         },
         {
@@ -727,7 +951,9 @@
           "type": "number",
           "label": {
             "en": "UV index now",
-            "fr": "Indice UV actuel"
+            "fr": "Indice UV actuel",
+            "de": "Aktueller UV-Index",
+            "es": "Índice UV actual"
           }
         },
         {
@@ -735,7 +961,9 @@
           "type": "number",
           "label": {
             "en": "UV index max today",
-            "fr": "Indice UV max du jour"
+            "fr": "Indice UV max du jour",
+            "de": "UV-Index Tagesmaximum",
+            "es": "Índice UV máximo del día"
           }
         },
         {
@@ -743,7 +971,9 @@
           "type": "number",
           "label": {
             "en": "UV index (clear sky)",
-            "fr": "Indice UV (ciel clair)"
+            "fr": "Indice UV (ciel clair)",
+            "de": "UV-Index (klarer Himmel)",
+            "es": "Índice UV (cielo despejado)"
           }
         },
         {
@@ -751,7 +981,9 @@
           "type": "number",
           "label": {
             "en": "Exposure level (0-5)",
-            "fr": "Niveau d'exposition (0-5)"
+            "fr": "Niveau d'exposition (0-5)",
+            "de": "Belastungsstufe (0-5)",
+            "es": "Nivel de exposición (0-5)"
           }
         },
         {
@@ -759,7 +991,9 @@
           "type": "string",
           "label": {
             "en": "Exposure level (text)",
-            "fr": "Niveau d'exposition (texte)"
+            "fr": "Niveau d'exposition (texte)",
+            "de": "Belastungsstufe (Text)",
+            "es": "Nivel de exposición (texto)"
           }
         },
         {
@@ -767,7 +1001,9 @@
           "type": "number",
           "label": {
             "en": "Exposure level of the peak (0-5)",
-            "fr": "Niveau d'exposition du pic (0-5)"
+            "fr": "Niveau d'exposition du pic (0-5)",
+            "de": "Belastungsstufe des Höchstwerts (0-5)",
+            "es": "Nivel de exposición del pico (0-5)"
           }
         },
         {
@@ -775,7 +1011,9 @@
           "type": "string",
           "label": {
             "en": "Exposure level of the peak (text)",
-            "fr": "Niveau d'exposition du pic (texte)"
+            "fr": "Niveau d'exposition du pic (texte)",
+            "de": "Belastungsstufe des Höchstwerts (Text)",
+            "es": "Nivel de exposición del pico (texto)"
           }
         },
         {
@@ -783,7 +1021,9 @@
           "type": "string",
           "label": {
             "en": "Sun protection advice",
-            "fr": "Conseil de protection solaire"
+            "fr": "Conseil de protection solaire",
+            "de": "Sonnenschutz-Empfehlung",
+            "es": "Consejo de protección solar"
           }
         },
         {
@@ -791,7 +1031,9 @@
           "type": "string",
           "label": {
             "en": "Hour of today's peak",
-            "fr": "Heure du pic du jour"
+            "fr": "Heure du pic du jour",
+            "de": "Uhrzeit des Tageshöchstwerts",
+            "es": "Hora del pico del día"
           }
         },
         {
@@ -799,7 +1041,9 @@
           "type": "string",
           "label": {
             "en": "Data updated at",
-            "fr": "Données mises à jour le"
+            "fr": "Données mises à jour le",
+            "de": "Daten aktualisiert am",
+            "es": "Datos actualizados el"
           }
         }
       ]

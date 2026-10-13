@@ -49,6 +49,15 @@ test('English gets the ISO order, French the day first', () => {
   assert.equal(formatMeasuredAt('2026-08-06T14:00', 'fr'), '06/08/2026 à 14:00');
 });
 
+test('German and Spanish write the day first, in their own words', () => {
+  assert.equal(formatMeasuredAt('2026-08-06T14:00', 'de'), '06.08.2026 um 14:00');
+  assert.equal(formatMeasuredAt('2026-08-06T14:00', 'es'), '06/08/2026 a las 14:00');
+});
+
+test('a language the code does not write falls back on English', () => {
+  assert.equal(formatMeasuredAt('2026-08-06T14:00', 'it'), '2026-08-06 14:00');
+});
+
 test('French is the default, like everywhere else here', () => {
   assert.equal(formatMeasuredAt('2026-08-06T14:00'), '06/08/2026 à 14:00');
 });
@@ -62,7 +71,7 @@ test('an unreadable or missing timestamp is null, never a broken string', () => 
   }
 });
 
-test('the hour alone is the same in both languages', () => {
+test('the hour alone is the same in every language', () => {
   assert.equal(formatHour('2026-08-06T14:00'), '14:00');
   assert.equal(formatHour('not a date'), null);
 });

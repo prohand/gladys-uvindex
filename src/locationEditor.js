@@ -24,7 +24,8 @@
 // handler error as a plain `error: e.message` string, which loses the
 // multi-language object and shows the user an English sentence in a French
 // screen. So every expected outcome — an unreadable postal code, an ambiguous
-// one, a duplicate — is RETURNED as `{ en, fr }`; only the unexpected throws.
+// one, a duplicate — is RETURNED as `{ en, fr, de, es }`; only the unexpected
+// throws.
 //
 // ONE CHANGE AT A TIME. The three actions that change the list read it, wait
 // for the network (a postal code lookup, the houses, the device list), then
@@ -49,6 +50,7 @@ import {
 import { formatPoint, toCoordinate } from './coordinates.js';
 import { errorReason } from './errors.js';
 import { HOUSE_ACCESS_DENIED } from './houses.js';
+import { inEveryLanguage } from './language.js';
 import {
   describeLocation,
   describeLocations,
@@ -75,12 +77,16 @@ const logger = createLogger({ name: 'locations' });
 const NO_LOCATION_YET = {
   en: 'No location yet. Add one with "Add a location".',
   fr: "Aucun lieu pour l'instant. Ajoutez-en un avec « Ajouter un lieu ».",
+  de: 'Noch kein Ort. Füge einen mit „Ort hinzufügen“ hinzu.',
+  es: 'Todavía no hay ninguna ubicación. Añada una con «Añadir una ubicación».',
 };
 
 /** Shown when the list is full. */
 const LIST_FULL = {
   en: `Maximum ${MAX_LOCATIONS} locations. Delete one first.`,
   fr: `Maximum ${MAX_LOCATIONS} lieux. Supprimez-en un d'abord.`,
+  de: `Maximal ${MAX_LOCATIONS} Orte. Entferne zuerst einen.`,
+  es: `Máximo ${MAX_LOCATIONS} ubicaciones. Elimine una primero.`,
 };
 
 /** The actions that change the list, and therefore run one at a time. */
@@ -88,11 +94,31 @@ const WRITING_ACTIONS = ['add_location', 'import_houses', 'remove_location'];
 
 /**
  * A message with the publication warning `commit` may return appended to it.
- * @param {{ en: string, fr: string }} message
- * @param {{ en: string, fr: string }|null} warning
+ * @param {Record<string, string>} message `{ en, fr, de, es }`
+ * @param {Record<string, string>|null} warning
  */
 function withWarning(message, warning) {
-  return warning ? { en: `${message.en}${warning.en}`, fr: `${message.fr}${warning.fr}` } : message;
+  return warning
+    ? inEveryLanguage((language) => `${message[language]}${warning[language]}`)
+    : message;
+}
+
+/**
+ * A name quoted the way each language quotes.
+ * @param {string} text
+ * @param {string} language
+ */
+function quote(text, language) {
+  switch (language) {
+    case 'fr':
+      return `« ${text} »`;
+    case 'de':
+      return `„${text}“`;
+    case 'es':
+      return `«${text}»`;
+    default:
+      return `"${text}"`;
+  }
 }
 
 /**
@@ -128,7 +154,7 @@ export function createLocationEditor({
    * second time — so it comes back as a sentence the action appends to its
    * answer, with the reason Gladys gave.
    * @param {Array<object>} locations the new list
-   * @returns {Promise<{ en: string, fr: string }|null>} the publication
+   * @returns {Promise<Record<string, string>|null>} the publication
    *   warning, or null when the devices were published
    */
   async function commit(locations) {
@@ -140,8 +166,10 @@ export function createLocationEditor({
       logger.error('The location list is saved, but publishing the devices failed', err);
       const reason = errorReason(err);
       return {
-        en: ` It is saved, but publishing the devices to Gladys failed: ${reason}. The Discovery tab will be up to date after its next scan or the next restart of the integration.`,
+        en: ` It is saved, but publishing the devices to Gladys failed: ${reason}. The Discover tab will be up to date after its next scan or the next restart of the integration.`,
         fr: ` C'est enregistré, mais la publication des appareils dans Gladys a échoué : ${reason}. L'onglet Découverte sera à jour après sa prochaine recherche ou le prochain redémarrage de l'intégration.`,
+        de: ` Es ist gespeichert, aber die Veröffentlichung der Geräte in Gladys ist fehlgeschlagen: ${reason}. Der Tab „Entdecken“ ist nach seinem nächsten Scan oder dem nächsten Neustart der Integration aktuell.`,
+        es: ` Se ha guardado, pero la publicación de los dispositivos en Gladys ha fallado: ${reason}. La pestaña «Descubrir» estará al día tras su próxima búsqueda o el próximo reinicio de la integración.`,
       };
     }
   }
@@ -167,7 +195,7 @@ export function createLocationEditor({
    * `string` fields — see src/coordinates.js for why — so `toCoordinate` is what
    * parses them, comma included, and what rejects a latitude of 300.
    * @param {object} fields
-   * @returns {{ point?: object, problem?: { en: string, fr: string } }} both
+   * @returns {{ point?: object, problem?: Record<string, string> }} both
    *   absent when the user typed no coordinate at all
    */
   function typedPoint(fields) {
@@ -183,6 +211,8 @@ export function createLocationEditor({
         problem: {
           en: `Latitude and longitude go together, in WGS-84 decimal degrees (latitude -90 to 90, longitude -180 to 180): "48.8566" and "2.3522". Received "${rawLatitude}" and "${rawLongitude}".`,
           fr: `La latitude et la longitude vont ensemble, en degrés décimaux WGS-84 (latitude de -90 à 90, longitude de -180 à 180) : « 48,8566 » et « 2,3522 ». Reçu « ${rawLatitude} » et « ${rawLongitude} ».`,
+          de: `Breiten- und Längengrad gehören zusammen, in Dezimalgrad WGS-84 (Breitengrad von -90 bis 90, Längengrad von -180 bis 180): „48,8566“ und „2,3522“. Erhalten: „${rawLatitude}“ und „${rawLongitude}“.`,
+          es: `La latitud y la longitud van juntas, en grados decimales WGS-84 (latitud de -90 a 90, longitud de -180 a 180): «48,8566» y «2,3522». Recibido: «${rawLatitude}» y «${rawLongitude}».`,
         },
       };
     }
@@ -203,6 +233,8 @@ export function createLocationEditor({
         problem: {
           en: `No French commune has the postal code ${postalCode}. Check it, or add the location by its latitude and longitude instead — the UV data itself is worldwide, only the postal code lookup is French.`,
           fr: `Aucune commune française n'a le code postal ${postalCode}. Vérifiez-le, ou ajoutez plutôt le lieu par sa latitude et sa longitude — les données UV sont mondiales, seule la recherche par code postal est française.`,
+          de: `Keine französische Gemeinde hat die Postleitzahl ${postalCode}. Prüfe sie, oder füge den Ort stattdessen über Breiten- und Längengrad hinzu — die UV-Daten selbst sind weltweit verfügbar, nur die Suche nach Postleitzahl ist französisch.`,
+          es: `Ningún municipio francés tiene el código postal ${postalCode}. Compruébelo, o añada la ubicación por su latitud y su longitud: los datos UV son mundiales, solo la búsqueda por código postal es francesa.`,
         },
       };
     }
@@ -217,6 +249,8 @@ export function createLocationEditor({
           problem: {
             en: `The postal code ${postalCode} covers ${candidates.length} communes. Fill the "Commune" field in with the one you mean: ${list}`,
             fr: `Le code postal ${postalCode} couvre ${candidates.length} communes. Renseignez le champ « Commune » avec celle que vous visez : ${list}`,
+            de: `Die Postleitzahl ${postalCode} umfasst ${candidates.length} Gemeinden. Gib im Feld „Gemeinde“ die gemeinte an: ${list}`,
+            es: `El código postal ${postalCode} abarca ${candidates.length} municipios. Rellene el campo «Municipio» con el que busca: ${list}`,
           },
         };
       }
@@ -224,6 +258,8 @@ export function createLocationEditor({
         problem: {
           en: `No commune named "${city}" has the postal code ${postalCode}. Communes with that code: ${list}`,
           fr: `Aucune commune nommée « ${city} » n'a le code postal ${postalCode}. Communes portant ce code : ${list}`,
+          de: `Keine Gemeinde namens „${city}“ hat die Postleitzahl ${postalCode}. Gemeinden mit dieser Postleitzahl: ${list}`,
+          es: `Ningún municipio llamado «${city}» tiene el código postal ${postalCode}. Municipios con ese código: ${list}`,
         },
       };
     }
@@ -240,12 +276,10 @@ export function createLocationEditor({
    * A house is named by the user in Gladys, so the name is the only thing that
    * tells "Maison" from "Bureau" in a sentence about three of them.
    * @param {Array<{ name: string }>} houses
-   * @param {'en' | 'fr'} language
+   * @param {string} language
    */
   function quoteNames(houses, language) {
-    return houses
-      .map((house) => (language === 'fr' ? `« ${house.name} »` : `"${house.name}"`))
-      .join(', ');
+    return houses.map((house) => quote(house.name, language)).join(', ');
   }
 
   /**
@@ -297,12 +331,16 @@ export function createLocationEditor({
             return {
               en: 'Type the postal code of the location to add, or its latitude and its longitude.',
               fr: 'Saisissez le code postal du lieu à ajouter, ou sa latitude et sa longitude.',
+              de: 'Gib die Postleitzahl des hinzuzufügenden Orts ein, oder seinen Breiten- und Längengrad.',
+              es: 'Escriba el código postal de la ubicación que quiere añadir, o su latitud y su longitud.',
             };
           }
           if (postalCode === '') {
             return {
               en: `"${rawPostalCode}" is not a French postal code: five digits are expected, e.g. "44300". Outside France, add the location by its latitude and longitude instead.`,
               fr: `« ${rawPostalCode} » n'est pas un code postal français : cinq chiffres sont attendus, par exemple « 44300 ». Hors de France, ajoutez plutôt le lieu par sa latitude et sa longitude.`,
+              de: `„${rawPostalCode}“ ist keine französische Postleitzahl: Erwartet werden fünf Ziffern, zum Beispiel „44300“. Außerhalb Frankreichs fügst du den Ort stattdessen über Breiten- und Längengrad hinzu.`,
+              es: `«${rawPostalCode}» no es un código postal francés: se esperan cinco cifras, por ejemplo «44300». Fuera de Francia, añada la ubicación por su latitud y su longitud.`,
             };
           }
         }
@@ -332,6 +370,8 @@ export function createLocationEditor({
           return {
             en: `That point is already watched by location ${positionOf(locations, duplicate.id)} "${duplicate.name}".`,
             fr: `Ce point est déjà surveillé par le lieu ${positionOf(locations, duplicate.id)} « ${duplicate.name} ».`,
+            de: `Dieser Punkt wird bereits von Ort ${positionOf(locations, duplicate.id)} „${duplicate.name}“ überwacht.`,
+            es: `Ese punto ya lo vigila la ubicación ${positionOf(locations, duplicate.id)} «${duplicate.name}».`,
           };
         }
 
@@ -368,13 +408,17 @@ export function createLocationEditor({
             {
               en: `Location ${position} "${name}" added: ${describeLocation(saved)}.`,
               fr: `Lieu ${position} « ${name} » ajouté : ${describeLocation(saved)}.`,
+              de: `Ort ${position} „${name}“ hinzugefügt: ${describeLocation(saved)}.`,
+              es: `Ubicación ${position} «${name}» añadida: ${describeLocation(saved)}.`,
             },
             warning,
           );
         }
         return {
-          en: `Location ${position} "${name}" added: ${describeLocation(saved)}. Add its device from the Discovery tab; "Show my locations" lists them all.`,
+          en: `Location ${position} "${name}" added: ${describeLocation(saved)}. Add its device from the Discover tab; "Show my locations" lists them all.`,
           fr: `Lieu ${position} « ${name} » ajouté : ${describeLocation(saved)}. Ajoutez son appareil depuis l'onglet Découverte ; « Afficher mes lieux » les liste tous.`,
+          de: `Ort ${position} „${name}“ hinzugefügt: ${describeLocation(saved)}. Füge sein Gerät über den Tab „Entdecken“ hinzu; „Meine Orte anzeigen“ listet alle auf.`,
+          es: `Ubicación ${position} «${name}» añadida: ${describeLocation(saved)}. Añada su dispositivo desde la pestaña «Descubrir»; «Mostrar mis ubicaciones» las lista todas.`,
         };
       },
 
@@ -419,6 +463,8 @@ export function createLocationEditor({
             return {
               en: 'Gladys refuses to share the coordinates of your houses with this integration. That access is granted when the integration is installed: update it to a version that asks for it, or remove and re-install it, and accept the request shown on the install screen. Meanwhile "Add a location" works the same way with a postal code.',
               fr: "Gladys refuse de partager les coordonnées de vos maisons avec cette intégration. Cet accès s'accorde à l'installation : mettez l'intégration à jour vers une version qui le demande, ou supprimez-la et réinstallez-la en acceptant la demande affichée sur l'écran d'installation. En attendant, « Ajouter un lieu » fait la même chose avec un code postal.",
+              de: 'Gladys verweigert dieser Integration die Koordinaten deiner Zuhause. Dieser Zugriff wird bei der Installation gewährt: Aktualisiere die Integration auf eine Version, die ihn anfordert, oder entferne sie und installiere sie neu, und akzeptiere die Anfrage auf dem Installationsbildschirm. Bis dahin funktioniert „Ort hinzufügen“ genauso mit einer Postleitzahl.',
+              es: 'Gladys se niega a compartir las coordenadas de sus viviendas con esta integración. Ese acceso se concede en la instalación: actualice la integración a una versión que lo solicite, o elimínela y vuelva a instalarla, y acepte la solicitud que aparece en la pantalla de instalación. Mientras tanto, «Añadir una ubicación» hace lo mismo con un código postal.',
             };
           }
           logger.warn('Could not read the houses configured in Gladys', err);
@@ -426,6 +472,8 @@ export function createLocationEditor({
           return {
             en: `Could not read the houses configured in Gladys: ${reason}. Add the location with its postal code instead.`,
             fr: `Impossible de lire les maisons configurées dans Gladys : ${reason}. Ajoutez plutôt le lieu avec son code postal.`,
+            de: `Die in Gladys konfigurierten Zuhause konnten nicht gelesen werden: ${reason}. Füge den Ort stattdessen mit seiner Postleitzahl hinzu.`,
+            es: `No se han podido leer las viviendas configuradas en Gladys: ${reason}. Añada la ubicación con su código postal.`,
           };
         }
 
@@ -433,6 +481,8 @@ export function createLocationEditor({
           return {
             en: 'Gladys has no house configured. Create one in Settings > Houses, place it on the map, then click this button again.',
             fr: 'Gladys ne contient aucune maison. Créez-en une dans Réglages > Maisons, placez-la sur la carte, puis relancez cette action.',
+            de: 'In Gladys ist kein Zuhause konfiguriert. Erstelle eines unter Einstellungen > Zuhause, platziere es auf der Karte und klicke dann erneut auf diese Schaltfläche.',
+            es: 'Gladys no tiene ninguna vivienda configurada. Cree una en Configuración > Viviendas, sitúela en el mapa y vuelva a pulsar este botón.',
           };
         }
 
@@ -446,13 +496,15 @@ export function createLocationEditor({
             return {
               en: 'The house you picked no longer exists in Gladys. Pick another one, or leave the field empty to add every house.',
               fr: "La maison choisie n'existe plus dans Gladys. Choisissez-en une autre, ou laissez le champ vide pour ajouter toutes les maisons.",
+              de: 'Das gewählte Zuhause existiert in Gladys nicht mehr. Wähle ein anderes, oder lass das Feld leer, um alle Zuhause hinzuzufügen.',
+              es: 'La vivienda elegida ya no existe en Gladys. Elija otra, o deje el campo vacío para añadir todas las viviendas.',
             };
           }
           houses = picked;
         }
 
         // The whole import is computed against ONE list and written ONCE: a
-        // setConfig per house would re-publish the Discovery tab as many times,
+        // setConfig per house would re-publish the Discover tab as many times,
         // and a failure halfway would leave half an import behind.
         const { locations } = getConfig();
         let updated = locations;
@@ -503,48 +555,62 @@ export function createLocationEditor({
           .join(LOCATION_LINE_SEPARATOR);
 
         // Every house that did NOT become a location gets a sentence naming it.
-        const notes = { en: '', fr: '' };
+        const notes = inEveryLanguage(() => '');
         if (duplicates.length > 0) {
-          const en = duplicates
-            .map(
-              ({ house, location }) =>
-                `"${house.name}" (already location ${positionOf(current, location.id)} "${location.name}")`,
-            )
-            .join(', ');
-          const fr = duplicates
-            .map(
-              ({ house, location }) =>
-                `« ${house.name} » (déjà le lieu ${positionOf(current, location.id)} « ${location.name} »)`,
-            )
-            .join(', ');
-          notes.en += ` Already watched: ${en}.`;
-          notes.fr += ` Déjà surveillé(s) : ${fr}.`;
+          const already = {
+            en: 'already location',
+            fr: 'déjà le lieu',
+            de: 'bereits Ort',
+            es: 'ya es la ubicación',
+          };
+          const listed = inEveryLanguage((language) =>
+            duplicates
+              .map(
+                ({ house, location }) =>
+                  `${quote(house.name, language)} (${already[language]} ${positionOf(current, location.id)} ${quote(location.name, language)})`,
+              )
+              .join(', '),
+          );
+          notes.en += ` Already watched: ${listed.en}.`;
+          notes.fr += ` Déjà surveillé(s) : ${listed.fr}.`;
+          notes.de += ` Bereits überwacht: ${listed.de}.`;
+          notes.es += ` Ya vigiladas: ${listed.es}.`;
         }
         if (unlocated.length > 0) {
           notes.en += ` Not placed on the map in Gladys, so there is no point to watch: ${quoteNames(unlocated, 'en')}. Set their location in Settings > Houses and click again.`;
           notes.fr += ` Sans position sur la carte dans Gladys, donc sans point à surveiller : ${quoteNames(unlocated, 'fr')}. Renseignez leur emplacement dans Réglages > Maisons puis relancez l'action.`;
+          notes.de += ` In Gladys nicht auf der Karte platziert, daher ohne zu überwachenden Punkt: ${quoteNames(unlocated, 'de')}. Lege ihren Standort unter Einstellungen > Zuhause fest und klicke erneut.`;
+          notes.es += ` Sin situar en el mapa en Gladys, por lo que no hay ningún punto que vigilar: ${quoteNames(unlocated, 'es')}. Indique su ubicación en Configuración > Viviendas y vuelva a pulsar.`;
         }
         if (overflow.length > 0) {
           notes.en += ` Maximum ${MAX_LOCATIONS} locations reached, left out: ${quoteNames(overflow, 'en')}.`;
           notes.fr += ` Maximum de ${MAX_LOCATIONS} lieux atteint, laissée(s) de côté : ${quoteNames(overflow, 'fr')}.`;
+          notes.de += ` Maximum von ${MAX_LOCATIONS} Orten erreicht, ausgelassen: ${quoteNames(overflow, 'de')}.`;
+          notes.es += ` Alcanzado el máximo de ${MAX_LOCATIONS} ubicaciones, omitidas: ${quoteNames(overflow, 'es')}.`;
         }
 
         if (addedIds.length === 0) {
           return {
             en: `No house to add: your ${houses.length} Gladys house(s) are already watched or cannot be.${notes.en}`,
             fr: `Aucune maison à ajouter : vos ${houses.length} maison(s) Gladys sont déjà surveillées ou ne peuvent pas l'être.${notes.fr}`,
+            de: `Kein Zuhause hinzuzufügen: Deine ${houses.length} Gladys-Zuhause werden bereits überwacht oder können es nicht werden.${notes.de}`,
+            es: `Ninguna vivienda que añadir: sus ${houses.length} vivienda(s) de Gladys ya se vigilan o no pueden vigilarse.${notes.es}`,
           };
         }
         const where = warning
-          ? { en: '', fr: '' }
+          ? inEveryLanguage(() => '')
           : {
-              en: '. Add their devices from the Discovery tab',
+              en: '. Add their devices from the Discover tab',
               fr: ". Ajoutez leurs appareils depuis l'onglet Découverte",
+              de: '. Füge ihre Geräte über den Tab „Entdecken“ hinzu',
+              es: '. Añada sus dispositivos desde la pestaña «Descubrir»',
             };
         return withWarning(
           {
             en: `${addedIds.length} Gladys house(s) added${where.en}:${LOCATION_LINE_SEPARATOR}${lines}${notes.en}`,
             fr: `${addedIds.length} maison(s) Gladys ajoutée(s)${where.fr} :${LOCATION_LINE_SEPARATOR}${lines}${notes.fr}`,
+            de: `${addedIds.length} Gladys-Zuhause hinzugefügt${where.de}:${LOCATION_LINE_SEPARATOR}${lines}${notes.de}`,
+            es: `${addedIds.length} vivienda(s) de Gladys añadida(s)${where.es}:${LOCATION_LINE_SEPARATOR}${lines}${notes.es}`,
           },
           warning,
         );
@@ -567,6 +633,8 @@ export function createLocationEditor({
         return {
           en: `${locations.length}/${MAX_LOCATIONS} location(s), as "${LOCATION_LINE_MARKER}number. name — postal code commune (latitude, longitude)":${LOCATION_LINE_SEPARATOR}${listing}`,
           fr: `${locations.length}/${MAX_LOCATIONS} lieu(x), au format « ${LOCATION_LINE_MARKER}numéro. nom — code postal commune (latitude, longitude) » :${LOCATION_LINE_SEPARATOR}${listing}`,
+          de: `${locations.length}/${MAX_LOCATIONS} Ort(e), im Format „${LOCATION_LINE_MARKER}Nummer. Name — Postleitzahl Gemeinde (Breitengrad, Längengrad)“:${LOCATION_LINE_SEPARATOR}${listing}`,
+          es: `${locations.length}/${MAX_LOCATIONS} ubicación(es), con el formato «${LOCATION_LINE_MARKER}número. nombre — código postal municipio (latitud, longitud)»:${LOCATION_LINE_SEPARATOR}${listing}`,
         };
       },
 
@@ -588,6 +656,8 @@ export function createLocationEditor({
           return {
             en: `There is no location ${fields.location}. Configured: ${describeLocations(locations)}`,
             fr: `Il n'y a pas de lieu ${fields.location}. Configurés : ${describeLocations(locations)}`,
+            de: `Es gibt keinen Ort ${fields.location}. Konfiguriert: ${describeLocations(locations)}`,
+            es: `No existe la ubicación ${fields.location}. Configuradas: ${describeLocations(locations)}`,
           };
         }
         if (fields.confirmation !== true) {
@@ -596,6 +666,8 @@ export function createLocationEditor({
           return {
             en: `Tick "I confirm" to delete location ${fields.location} "${location.name}" (${describeLocation(location)}).`,
             fr: `Cochez « Je confirme » pour supprimer le lieu ${fields.location} « ${location.name} » (${describeLocation(location)}).`,
+            de: `Setze das Häkchen bei „Ich bestätige“, um Ort ${fields.location} „${location.name}“ zu entfernen (${describeLocation(location)}).`,
+            es: `Marque «Confirmo» para eliminar la ubicación ${fields.location} «${location.name}» (${describeLocation(location)}).`,
           };
         }
 
@@ -614,22 +686,28 @@ export function createLocationEditor({
             ? {
                 en: ' The locations after it moved up one rank: run "Show my locations" before deleting another one.',
                 fr: " Les lieux suivants remontent d'un rang : lancez « Afficher mes lieux » avant d'en supprimer un autre.",
+                de: ' Die folgenden Orte rücken um eine Position auf: Führe „Meine Orte anzeigen“ aus, bevor du einen weiteren entfernst.',
+                es: ' Las ubicaciones siguientes suben un puesto: ejecute «Mostrar mis ubicaciones» antes de eliminar otra.',
               }
-            : { en: '', fr: '' };
+            : inEveryLanguage(() => '');
 
         if (warning) {
-          // Saved, but the Discovery tab was not told: it cannot be promised
+          // Saved, but the Discover tab was not told: it cannot be promised
           // that the location left it.
           const device = created
             ? {
                 en: ` Its device "${created.name}" still exists in Gladys: delete it yourself from the integration's Devices tab.`,
                 fr: ` Son appareil « ${created.name} » existe toujours dans Gladys : supprimez-le vous-même depuis l'onglet Appareils de l'intégration.`,
+                de: ` Sein Gerät „${created.name}“ existiert in Gladys weiterhin: Lösche es selbst im Tab „Geräte“ der Integration.`,
+                es: ` Su dispositivo «${created.name}» sigue existiendo en Gladys: elimínelo usted mismo desde la pestaña «Dispositivos» de la integración.`,
               }
-            : { en: '', fr: '' };
+            : inEveryLanguage(() => '');
           return withWarning(
             {
               en: `Location "${location.name}" removed.${device.en}${renumbered.en}`,
               fr: `Lieu « ${location.name} » supprimé.${device.fr}${renumbered.fr}`,
+              de: `Ort „${location.name}“ entfernt.${device.de}${renumbered.de}`,
+              es: `Ubicación «${location.name}» eliminada.${device.es}${renumbered.es}`,
             },
             warning,
           );
@@ -638,8 +716,10 @@ export function createLocationEditor({
           // Never created: re-publishing the list without it is enough, the
           // Discovery screen stops offering it on the spot.
           return {
-            en: `Location "${location.name}" removed, and it is no longer offered in the Discovery tab.${renumbered.en}`,
+            en: `Location "${location.name}" removed, and it is no longer offered in the Discover tab.${renumbered.en}`,
             fr: `Lieu « ${location.name} » supprimé, et il n'est plus proposé dans l'onglet Découverte.${renumbered.fr}`,
+            de: `Ort „${location.name}“ entfernt, und er wird im Tab „Entdecken“ nicht mehr angeboten.${renumbered.de}`,
+            es: `Ubicación «${location.name}» eliminada, y ya no se propone en la pestaña «Descubrir».${renumbered.es}`,
           };
         }
         // An integration can only stop OFFERING a device; deleting one the user
@@ -647,6 +727,8 @@ export function createLocationEditor({
         return {
           en: `Location "${location.name}" removed. Its device "${created.name}" still exists in Gladys and will stop updating: delete it yourself from the integration's Devices tab — an integration is not allowed to delete a device.${renumbered.en}`,
           fr: `Lieu « ${location.name} » supprimé. Son appareil « ${created.name} » existe toujours dans Gladys et ne se mettra plus à jour : supprimez-le vous-même depuis l'onglet Appareils de l'intégration — une intégration n'a pas le droit de supprimer un appareil.${renumbered.fr}`,
+          de: `Ort „${location.name}“ entfernt. Sein Gerät „${created.name}“ existiert in Gladys weiterhin und wird nicht mehr aktualisiert: Lösche es selbst im Tab „Geräte“ der Integration — eine Integration darf kein Gerät löschen.${renumbered.de}`,
+          es: `Ubicación «${location.name}» eliminada. Su dispositivo «${created.name}» sigue existiendo en Gladys y dejará de actualizarse: elimínelo usted mismo desde la pestaña «Dispositivos» de la integración; una integración no tiene permiso para eliminar un dispositivo.${renumbered.es}`,
         };
       },
     },

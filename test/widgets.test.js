@@ -82,11 +82,50 @@ test('the location card shows the index, its level and the advice from ONE readi
   assert.equal(clearSky.value, 8);
 
   const [exposure, peak] = find(content, 'status').items;
-  assert.deepEqual(exposure.value, { en: 'High', fr: 'Élevé' });
-  assert.deepEqual(peak.value, { en: '8 at 13:00', fr: '8 à 13:00' });
+  assert.deepEqual(exposure.value, { en: 'High', fr: 'Élevé', de: 'Hoch', es: 'Alto' });
+  assert.deepEqual(peak.value, {
+    en: '8 at 13:00',
+    fr: '8 à 13:00',
+    de: '8 um 13:00',
+    es: '8 a las 13:00',
+  });
 
   const body = content.components.find((c) => c.type === 'text' && c.variant === 'body');
   assert.deepEqual(body.text, UV_LEVEL_ADVICE[3]);
+});
+
+/** Every multi-language object of a content, wherever it sits. */
+function textsOf(value, found = []) {
+  if (Array.isArray(value)) {
+    value.forEach((entry) => textsOf(entry, found));
+  } else if (value && typeof value === 'object') {
+    if (typeof value.en === 'string') {
+      found.push(value);
+    } else {
+      Object.values(value).forEach((entry) => textsOf(entry, found));
+    }
+  }
+  return found;
+}
+
+test('every text of every card speaks the four languages of Gladys', async () => {
+  const contents = [
+    buildLocationContent(MAISON, READING),
+    buildLocationContent(MAISON, EMPTY_READING),
+    buildOverviewContent([{ location: MAISON, reading: READING }]),
+    buildOverviewContent([]),
+    await widgetsFor([MAISON])[WIDGET.LOCATION]({ settings: { location: 'device:gone' } }),
+  ];
+  for (const content of contents) {
+    const texts = textsOf(content);
+    assert.ok(texts.length > 0);
+    for (const text of texts) {
+      assert.deepEqual(Object.keys(text).sort(), ['de', 'en', 'es', 'fr'], JSON.stringify(text));
+    }
+  }
+  const stamp = find(buildLocationContent(MAISON, READING), 'text').text;
+  assert.equal(stamp.de, 'Maison · aktualisiert 06.08.2026 um 14:00');
+  assert.equal(stamp.es, 'Maison · actualizado 06/08/2026 a las 14:00');
 });
 
 test('the forecast curve sits on real instants, the peak marked', () => {

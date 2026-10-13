@@ -682,7 +682,7 @@ test('a location saved but not published says both, with the reason', async () =
   assert.match(message.fr, /enregistré, mais la publication des appareils dans Gladys a échoué/);
   assert.match(message.en, /saved, but publishing the devices to Gladys failed/);
   assert.match(message.en, /unknown category/);
-  assert.doesNotMatch(message.en, /Add its device from the Discovery tab/);
+  assert.doesNotMatch(message.en, /Add its device from the Discover tab/);
 });
 
 test('a removal saved but not published does not promise the Discovery tab', async () => {

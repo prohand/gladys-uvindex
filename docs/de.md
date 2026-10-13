@@ -1,6 +1,6 @@
 # UV-Index
 
-Diese Integration verfolgt den **UV-Index** der Orte Ihrer Wahl. Sie fügen Ihre
+Diese Integration verfolgt den **UV-Index** der Orte deiner Wahl. Du fügst deine
 **Gladys-Zuhause mit einem Klick** hinzu, oder einen Ort über seine
 **französische Postleitzahl**, und ein Gerät erscheint im Tab **Entdecken**,
 bereit, zu Gladys hinzugefügt zu werden.
@@ -8,30 +8,30 @@ bereit, zu Gladys hinzugefügt zu werden.
 Kein Konto zu erstellen, kein API-Schlüssel einzufügen: Beide Quellen sind
 öffentliche Open Data.
 
-## Ihre Gladys-Zuhause mit einem Klick hinzufügen
+## Deine Gladys-Zuhause mit einem Klick hinzufügen
 
-Sie haben Gladys bereits gesagt, wo Sie wohnen: Das ist die Karte unter
+Du hast Gladys bereits gesagt, wo du wohnst: Das ist die Karte unter
 **Einstellungen > Zuhause**. Die Schaltfläche **„Meine Gladys-Zuhause
 hinzufügen“** liest diese Zuhause und erstellt für jedes, das noch nicht
 überwacht wird, einen Ort — ohne Postleitzahl einzugeben.
 
 Drei Dinge sind gut zu wissen:
 
-- **Der Zugriff ist eine Berechtigung.** Wo Sie wohnen, sind personenbezogene
-  Daten: Gladys teilt sie nur, wenn Sie die Anfrage auf dem
+- **Der Zugriff ist eine Berechtigung.** Wo du wohnst, sind personenbezogene
+  Daten: Gladys teilt sie nur, wenn du die Anfrage auf dem
   Installationsbildschirm der Integration akzeptiert haben. Antwortet die
-  Schaltfläche, dass der Zugriff verweigert wird, entfernen Sie die Integration
-  und installieren Sie sie neu, und akzeptieren Sie dabei die angezeigte Anfrage.
-- **Ein Zuhause, das Sie nie auf der Karte platziert haben, hat keine
-  Koordinaten.** Es wird in der Antwort genannt; verorten Sie es unter
-  Einstellungen > Zuhause und führen Sie die Aktion erneut aus.
+  Schaltfläche, dass der Zugriff verweigert wird, entferne die Integration
+  und installiere sie neu, und akzeptiere dabei die angezeigte Anfrage.
+- **Ein Zuhause, das du nie auf der Karte platziert hast, hat keine
+  Koordinaten.** Es wird in der Antwort genannt; verorte es unter
+  Einstellungen > Zuhause und führe die Aktion erneut aus.
 - **Das ist keine Synchronisierung.** Die Zuhause werden in dem Moment gelesen,
-  in dem Sie klicken. Was dabei entsteht, ist ein gewöhnlicher Ort, der wie die
+  in dem du klickst. Was dabei entsteht, ist ein gewöhnlicher Ort, der wie die
   anderen umbenannt und entfernt wird, und ein Zuhause, das danach in Gladys
   verschoben wird, verschiebt seinen Ort nicht.
 
-Um nur eines Ihrer Zuhause hinzuzufügen — ein Ferienhaus, das Sie nicht
-überwachen möchten, bleibt außen vor — wählen Sie es im Feld **Zuhause** der
+Um nur eines deiner Zuhause hinzuzufügen — ein Ferienhaus, das du nicht
+überwachen möchtest, bleibt außen vor — wähle es im Feld **Zuhause** der
 Schaltfläche (Gladys 5.2 oder neuer); bleibt das Feld leer, werden alle Zuhause
 hinzugefügt.
 
@@ -40,51 +40,51 @@ gemeldet, nicht ein zweites Mal hinzugefügt.
 
 ## Einen Ort hinzufügen
 
-Klicken Sie in der Konfiguration der Integration auf **„Ort hinzufügen“** und
-füllen Sie das Formular aus:
+Klicke im Reiter **Konfiguration** der Integration auf **„Ort hinzufügen“**
+und fülle das Formular aus:
 
 - **Name des Orts** — optional. Bleibt das Feld leer, wird der Name der
   gefundenen Gemeinde verwendet („Nantes“).
 - **Postleitzahl** — fünf Ziffern, z. B. `44300`. Das ist der normale Weg.
 - **Gemeinde** — optional und nur nötig, wenn eine Postleitzahl mehrere
   Gemeinden umfasst. `01000` steht für Bourg-en-Bresse, Péronnas _und_
-  Saint-Denis-lès-Bourg: Führen Sie die Aktion zuerst ohne dieses Feld aus, die
-  unter der Schaltfläche angezeigte Antwort listet die Kandidaten auf, und führen
-  Sie sie dann mit der gemeinten Gemeinde erneut aus.
+  Saint-Denis-lès-Bourg: Führe die Aktion zuerst ohne dieses Feld aus, die
+  unter der Schaltfläche angezeigte Antwort listet die Kandidaten auf, und führe
+  sie dann mit der gemeinten Gemeinde erneut aus.
 - **Breitengrad / Längengrad** — optional. Zusammen angegeben, werden sie
   unverändert verwendet, und die Postleitzahl oben wird zu einer bloßen
   Bezeichnung.
 
 Die Meldung unter der Schaltfläche bestätigt, was hinzugefügt wurde, mit der
 gefundenen Gemeinde und ihrem Punkt. **Das Gerät wird nicht automatisch
-erstellt**: Holen Sie es im Tab **Entdecken** der Integration ab.
+erstellt**: Hol es im Tab **Entdecken** der Integration ab.
 
 ### Ein Ort außerhalb Frankreichs
 
 Die Postleitzahl ist zwangsläufig französisch — es ist das Register des
 französischen Staates, das sie auflöst. Die UV-Daten selbst sind weltweit
-verfügbar: Lassen Sie für einen Ort im Ausland die Postleitzahl leer und geben
-Sie **Breitengrad** und **Längengrad** in Dezimalgrad WGS-84 ein. Ein
+verfügbar: Lass für einen Ort im Ausland die Postleitzahl leer und gib
+**Breitengrad** und **Längengrad** in Dezimalgrad WGS-84 ein. Ein
 Dezimalkomma wird akzeptiert (`48,8566`).
 
-## Ihre Orte auflisten und entfernen
+## Deine Orte auflisten und entfernen
 
 - **„Meine Orte anzeigen“** listet alles Konfigurierte nummeriert auf. Jeder
   Eintrag beginnt mit einem „•“, gefolgt von seiner Nummer.
 - **„Ort entfernen“** fragt nach dieser Nummer — der, die die Liste ausgibt —
-  und dann nach einer Bestätigung. Führen Sie die Aktion einmal **ohne Häkchen**
+  und dann nach einer Bestätigung. Führe die Aktion einmal **ohne Häkchen**
   aus, um zu prüfen, welcher Ort entfernt würde.
 
 Zwei Dinge sind beim Entfernen gut zu wissen:
 
 1. **Das Gladys-Gerät wird nicht gelöscht.** Eine Integration darf kein Gerät
    löschen; sie kann es nur nicht mehr anbieten. Der Ort verschwindet aus dem Tab
-   „Entdecken“, und das Gerät wird nicht mehr aktualisiert — löschen Sie es
-   selbst im Tab **Geräte** der Integration, wenn Sie es nicht mehr möchten. Die
-   Meldung zum Entfernen nennt es Ihnen.
+   „Entdecken“, und das Gerät wird nicht mehr aktualisiert — lösche es
+   selbst im Tab **Geräte** der Integration, wenn du es nicht mehr möchtest. Die
+   Meldung zum Entfernen nennt es dir.
 2. **Die folgenden Nummern rücken um eine Position auf.** Wird Ort 2 von 4
-   entfernt, wird der bisherige Ort 3 zu Ort 2. Führen Sie „Meine Orte anzeigen“
-   erneut aus, bevor Sie einen weiteren entfernen.
+   entfernt, wird der bisherige Ort 3 zu Ort 2. Führe „Meine Orte anzeigen“
+   erneut aus, bevor du einen weiteren entfernst.
 
 ## Was jedes Gerät misst
 
@@ -134,7 +134,7 @@ statt auf einem eigenen Gerät.
 Es ist nicht der Moment, in dem die Integration zuletzt nachgefragt hat. Die
 Vorhersage hat eine stündliche Auflösung: Wird sie dreimal in einer Stunde
 gelesen, liefert sie dreimal denselben Zeitstempel, und genau darum geht es: Er
-sagt Ihnen, wie alt die Zahlen sind, nicht wie oft sie abgerufen wurden. Schlägt
+sagt dir, wie alt die Zahlen sind, nicht wie oft sie abgerufen wurden. Schlägt
 eine Aktualisierung fehl, wird gar nichts veröffentlicht — der Zeitstempel bleibt
 stehen, und das Alter wird auf dem Dashboard sichtbar.
 
@@ -150,27 +150,28 @@ Quelle, die mit der Stunde von gestern antwortet, als das erscheint, was sie ist
 
 ## Auf dem Dashboard
 
-Im Dashboard-Editor werden zwei Widgets angeboten (Gladys 5.1 oder neuer), unter
-dem Namen der Integration:
+Im Dashboard-Editor (**Dashboard → Bearbeiten → Neues Widget**) werden zwei
+Widgets angeboten (Gladys 5.1 oder neuer), im Abschnitt **Integrations-Widgets**:
 
 - **UV-Index eines Orts** — der aktuelle Index, das heutige Maximum und der Index
   bei klarem Himmel, **die stündliche Vorhersagekurve des Tages** mit markiertem
   Höchstwert und einer „Jetzt“-Linie, die Belastungsstufe und die zugehörige
-  Empfehlung. Wählen Sie in den Widget-Einstellungen das **UV-Gerät** des
+  Empfehlung. Wähle in den Widget-Einstellungen das **UV-Gerät** des
   anzuzeigenden Orts: Nur die bereits zu Gladys hinzugefügten Geräte werden
   aufgelistet.
 - **UV-Index aller Orte** — eine Zeile pro Ort (höchstens 10), mit dem aktuellen
   Index und seiner Stufe, farbig. Keine Einstellungen.
 
 Die Widgets werden in der Sprache der Person angezeigt, die sie ansieht, und
-folgen jeder Aktualisierung der Integration. Wenn Sie den Ort eines Widgets
-entfernen, sagt das Widget es: Wählen Sie in seinen Einstellungen ein anderes
+folgen jeder Aktualisierung der Integration. Wenn du den Ort eines Widgets
+entfernst, sagt das Widget es: Wähle in seinen Einstellungen ein anderes
 Gerät.
 
 ## In Szenen
 
 Die Integration fügt dem Szeneneditor zwei Karten hinzu (Gladys 5.1 oder neuer),
-in der Kategorie **Integrationen**.
+in der Kategorie **Integrationen**: einen **Integrations-Auslöser** und eine
+**Integrations-Aktion**.
 
 ### Auslöser „UV-Belastungsstufe geändert“
 
@@ -193,7 +194,7 @@ Gut zu wissen:
 - Die erste Messung nach dem Start der Integration ist ein Ausgangswert und löst
   nichts aus: Ein Neustart ist keine Veränderung am Himmel.
 - Um auf einen **Schwellenwert** zu reagieren („sobald die Stufe mindestens 3
-  ist“), verwenden Sie stattdessen den Standardauslöser auf der Funktion
+  ist“), verwende stattdessen den Auslöser **Änderung von Gerätestatus** auf der Funktion
   „UV-Belastungsstufe“ des Geräts.
 - Die Texte (Bezeichnung, Empfehlung) werden in der **Sprache der Gerätenamen**
   geschrieben, die in den allgemeinen Einstellungen gewählt ist.
@@ -206,20 +207,20 @@ Index bei klarem Himmel, Stufe und Bezeichnung, Stufe und Bezeichnung des
 Höchstwerts, **Uhrzeit des Höchstwerts**, Schutzempfehlung und Uhrzeit der
 Daten. Ein Wert, den die Quelle nicht hat, fehlt und wird nie durch 0 ersetzt.
 
-Beispiel: ein Auslöser „jeden Tag um 8:00“, dann „UV-Index lesen“ für Ihr
+Beispiel: ein Auslöser „jeden Tag um 8:00“, dann „UV-Index lesen“ für dein
 Zuhause, dann eine Nachricht „UV-Höchstwert {{0.1.uv_index_max_today}}
 ({{0.1.level_max_today_label}}) gegen {{0.1.peak_time}}“. Die Nummern (`0.1`)
-sind die der Aktion in Ihrer Szene: Der Editor schlägt sie vor.
+sind die der Aktion in deiner Szene: Der Editor schlägt sie vor.
 
 ## Allgemeine Einstellungen
 
 - **Sprache der Gerätenamen** — alles andere, was diese Integration sagt, folgt
-  bereits Ihrer Gladys-Sprache, aber ein Gerätename und die Namen seiner
+  bereits deiner Gladys-Sprache, aber ein Gerätename und die Namen seiner
   Funktionen werden so gespeichert, wie sie im Moment der Erstellung des Geräts
   sind. Ein bereits hinzugefügtes Gerät **behält** die Namen, mit denen es
-  erstellt wurde: Ändern Sie die Sprache, löschen Sie dann das Gerät und fügen
-  Sie es über den Tab „Entdecken“ erneut hinzu, um es umzubenennen. Die Texte, die
-  an Ihre Szenen übergeben werden (Bezeichnung der Stufe, Empfehlung), folgen
+  erstellt wurde: Ändere die Sprache, lösche dann das Gerät und füge
+  es über den Tab „Entdecken“ erneut hinzu, um es umzubenennen. Die Texte, die
+  an deine Szenen übergeben werden (Bezeichnung der Stufe, Empfehlung), folgen
   ebenfalls dieser Einstellung. Zur Auswahl stehen Französisch (Standard),
   Englisch, Deutsch und Spanisch.
 - **Aktualisierungsintervall** — standardmäßig 30 Minuten, zwischen 10 Minuten
@@ -237,7 +238,7 @@ trotzdem. Ein Ort, für den die Quelle keinen Wert hat, zeigt „keine Daten“,
 eine Stufe. Anders als die Widgets zeigt diese Schaltfläche nie einen alten Wert:
 Eine ausgefallene Quelle erscheint als ausgefallen.
 
-Der Bildschirm **Überwachung** zeigt außerdem den Status der Integration: Solange
+Der Reiter **Überwachung** zeigt außerdem den Status der Integration: Solange
 kein Ort konfiguriert ist, sagt er, dass einer hinzugefügt werden muss.
 
 ## Woher die Daten kommen

@@ -2,7 +2,7 @@
 
 This integration follows the **UV index** of the locations you choose. You add
 your **Gladys houses in one click**, or a location by its **French postal code**,
-and a device shows up in the **Discovery** tab, ready to be added to Gladys.
+and a device shows up in the **Discover** tab, ready to be added to Gladys.
 
 No account to create, no API key to paste: both sources are public open data.
 
@@ -33,7 +33,7 @@ second time.
 
 ## Adding a location
 
-In the integration's Configuration screen, click **"Add a location"** and fill
+In the integration's **Configuration** tab, click **"Add a location"** and fill
 the form in:
 
 - **Location name** — optional. Left empty, the name of the commune found is
@@ -48,7 +48,7 @@ the form in:
 
 The message under the button confirms what was added, with the commune it
 resolved to and its point. **The device is not created automatically**: go and
-pick it up in the integration's **Discovery** tab.
+pick it up in the integration's **Discover** tab.
 
 ### A location outside France
 
@@ -68,7 +68,7 @@ decimal degrees. A decimal comma is accepted (`48,8566`).
 Two things to know about removal:
 
 1. **The Gladys device is not deleted.** An integration is not allowed to delete
-   a device; it can only stop offering it. The location leaves the Discovery tab
+   a device; it can only stop offering it. The location leaves the Discover tab
    and the device stops updating — delete it yourself from the integration's
    **Devices** tab if you no longer want it. The removal message names it for
    you.
@@ -138,8 +138,8 @@ answers with yesterday's hour shows up as what it is.
 
 ## On the dashboard
 
-Two widgets are offered in the dashboard editor (Gladys 5.1 or later), under the
-name of the integration:
+Two widgets are offered in the dashboard editor (**Dashboard → Edit → New
+widget**, Gladys 5.1 or later), in the **Integration widgets** section:
 
 - **UV index of a location** — the index now, today's maximum and the clear-sky
   index, **today's hourly forecast curve** with the peak marked and a "now" line,
@@ -156,7 +156,8 @@ so: pick another device in its settings.
 ## In scenes
 
 The integration adds two cards to the scene editor (Gladys 5.1 or later), under
-the **Integrations** category.
+the **Integrations** category: an **Integration trigger** and an **Integration
+action**.
 
 ### Trigger "UV exposure level changed"
 
@@ -179,7 +180,8 @@ Good to know:
 - The first reading after the integration starts is a baseline and fires
   nothing: a restart is not a change in the sky.
 - To react to a **threshold** ("as soon as the level is at least 3"), use the
-  standard trigger on the device's "UV exposure level" feature instead.
+  **Device state change** trigger on the device's "UV exposure level" feature
+  instead.
 - The texts (label, advice) are written in the **language of the device names**
   chosen in the general settings.
 
@@ -202,7 +204,7 @@ are the ones of the action in your scene: the editor offers them.
   already follows your Gladys language, but a device name and its feature names
   are stored as they are the moment you create the device. A device already added
   **keeps** the names it was created with: change the language, then delete the
-  device and add it again from the Discovery tab to rename it. The texts handed
+  device and add it again from the Discover tab to rename it. The texts handed
   to your scenes (level label, advice) follow this setting too. The choices are
   French (the default), English, German and Spanish.
 - **Refresh interval** — 30 minutes by default, between 10 minutes and 6 hours.
@@ -218,7 +220,7 @@ If one location fails, its line says why and the others still answer. A location
 the source has no value for reads "no data", never a level. Unlike the widgets,
 this button never shows an old value: a source that is down reads as down.
 
-The Supervision screen also shows the integration's status: while no location is
+The **Supervision** tab also shows the integration's status: while no location is
 configured, it says one has to be added.
 
 ## Where the data comes from

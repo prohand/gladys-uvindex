@@ -26,7 +26,7 @@ const logger = createLogger({ name: 'provider-test' });
 const NO_LOCATION_MESSAGE = {
   en: 'No location with usable coordinates yet. Add one with "Add a location".',
   fr: 'Aucun lieu avec des coordonnées utilisables. Ajoutez-en un avec « Ajouter un lieu ».',
-  de: 'Noch kein Ort mit verwendbaren Koordinaten. Fügen Sie einen mit „Ort hinzufügen“ hinzu.',
+  de: 'Noch kein Ort mit verwendbaren Koordinaten. Füge einen mit „Ort hinzufügen“ hinzu.',
   es: 'Todavía no hay ninguna ubicación con coordenadas utilizables. Añada una con «Añadir una ubicación».',
 };
 

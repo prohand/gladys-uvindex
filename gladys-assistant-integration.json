@@ -5,7 +5,7 @@
   "description": {
     "en": "UV index for the locations you choose, from the Copernicus CAMS forecast.",
     "fr": "Indice UV des lieux de votre choix, via la prévision CAMS de Copernicus.",
-    "de": "UV-Index für die Orte Ihrer Wahl, aus der CAMS-Vorhersage von Copernicus.",
+    "de": "UV-Index für die Orte deiner Wahl, aus der CAMS-Vorhersage von Copernicus.",
     "es": "Índice UV de las ubicaciones que elija, según la previsión CAMS de Copernicus."
   },
   "version": "2.4.0",
@@ -26,9 +26,9 @@
         "es": "Cómo funciona"
       },
       "description": {
-        "en": "Add a location with the button below: type its French postal code, it is resolved to a commune, and a UV device appears in the Discovery tab, ready to be added to Gladys. The UV index comes from the CAMS forecast (Copernicus), republished as open data by Open-Meteo, and postal codes are read through the French state's \"Découpage administratif\" API: no account and no API key are needed. Outside France, add a location by its latitude and longitude — the UV data itself is worldwide. Once a device is added, the dashboard offers two UV widgets and the scene editor a UV trigger and a UV action.",
+        "en": "Add a location with the button below: type its French postal code, it is resolved to a commune, and a UV device appears in the Discover tab, ready to be added to Gladys. The UV index comes from the CAMS forecast (Copernicus), republished as open data by Open-Meteo, and postal codes are read through the French state's \"Découpage administratif\" API: no account and no API key are needed. Outside France, add a location by its latitude and longitude — the UV data itself is worldwide. Once a device is added, the dashboard offers two UV widgets and the scene editor a UV trigger and a UV action.",
         "fr": "Ajoutez un lieu avec le bouton ci-dessous : saisissez son code postal, il est résolu en commune, puis un appareil UV apparaît dans l'onglet Découverte, prêt à être ajouté à Gladys. L'indice UV provient de la prévision CAMS (Copernicus), rediffusée en open data par Open-Meteo, et les codes postaux sont lus via l'API « Découpage administratif » de l'État : aucun compte ni clé d'API n'est nécessaire. Hors de France, ajoutez un lieu par sa latitude et sa longitude — les données UV sont mondiales. Une fois l'appareil ajouté, le tableau de bord propose deux widgets UV et l'éditeur de scènes un déclencheur et une action UV.",
-        "de": "Fügen Sie mit der Schaltfläche unten einen Ort hinzu: Geben Sie seine französische Postleitzahl ein, sie wird einer Gemeinde zugeordnet, und ein UV-Gerät erscheint im Tab „Entdecken“, bereit, zu Gladys hinzugefügt zu werden. Der UV-Index stammt aus der CAMS-Vorhersage (Copernicus), die Open-Meteo als Open Data bereitstellt, und die Postleitzahlen werden über die API „Découpage administratif“ des französischen Staates gelesen: Es sind weder ein Konto noch ein API-Schlüssel nötig. Außerhalb Frankreichs fügen Sie einen Ort über seinen Breiten- und Längengrad hinzu — die UV-Daten selbst sind weltweit verfügbar. Sobald ein Gerät hinzugefügt ist, bietet das Dashboard zwei UV-Widgets und der Szeneneditor einen UV-Auslöser und eine UV-Aktion.",
+        "de": "Füge mit der Schaltfläche unten einen Ort hinzu: Gib seine französische Postleitzahl ein, sie wird einer Gemeinde zugeordnet, und ein UV-Gerät erscheint im Tab „Entdecken“, bereit, zu Gladys hinzugefügt zu werden. Der UV-Index stammt aus der CAMS-Vorhersage (Copernicus), die Open-Meteo als Open Data bereitstellt, und die Postleitzahlen werden über die API „Découpage administratif“ des französischen Staates gelesen: Es sind weder ein Konto noch ein API-Schlüssel nötig. Außerhalb Frankreichs fügst du einen Ort über seinen Breiten- und Längengrad hinzu — die UV-Daten selbst sind weltweit verfügbar. Sobald ein Gerät hinzugefügt ist, bietet das Dashboard zwei UV-Widgets und der Szeneneditor einen UV-Auslöser und eine UV-Aktion.",
         "es": "Añada una ubicación con el botón de abajo: escriba su código postal francés, se asocia a un municipio y aparece un dispositivo UV en la pestaña «Descubrir», listo para añadirlo a Gladys. El índice UV procede de la previsión CAMS (Copernicus), redistribuida como datos abiertos por Open-Meteo, y los códigos postales se leen a través de la API «Découpage administratif» del Estado francés: no se necesita ninguna cuenta ni clave de API. Fuera de Francia, añada una ubicación por su latitud y su longitud: los datos UV son mundiales. Una vez añadido un dispositivo, el panel ofrece dos widgets UV y el editor de escenas un disparador y una acción UV."
       },
       "links": [
@@ -87,9 +87,9 @@
         "es": "Idioma de los nombres de los dispositivos"
       },
       "description": {
-        "en": "The language the device and feature names are written in: \"Indice UV\", \"UV index\", \"UV-Index\" or \"Índice UV\". Everything else this integration displays already follows your Gladys language, but the name of a device and of its features is stored as it is published, so it has to be chosen here — as do the texts the UV scene cards hand to your scenes. A device already added to Gladys keeps the names it was created with: delete it and add it again from the Discovery tab to rename it.",
+        "en": "The language the device and feature names are written in: \"Indice UV\", \"UV index\", \"UV-Index\" or \"Índice UV\". Everything else this integration displays already follows your Gladys language, but the name of a device and of its features is stored as it is published, so it has to be chosen here — as do the texts the UV scene cards hand to your scenes. A device already added to Gladys keeps the names it was created with: delete it and add it again from the Discover tab to rename it.",
         "fr": "La langue dans laquelle sont écrits les noms des appareils et de leurs fonctionnalités : « Indice UV », « UV index », « UV-Index » ou « Índice UV ». Tout le reste de ce que l'intégration affiche suit déjà la langue de votre compte Gladys, mais le nom d'un appareil et de ses fonctionnalités est enregistré tel qu'il est publié : il faut donc le choisir ici, comme les textes que les cartes de scène UV transmettent à vos scènes. Un appareil déjà ajouté à Gladys conserve les noms avec lesquels il a été créé : supprimez-le et rajoutez-le depuis l'onglet Découverte pour le renommer.",
-        "de": "Die Sprache, in der die Namen der Geräte und ihrer Funktionen geschrieben werden: „Indice UV“, „UV index“, „UV-Index“ oder „Índice UV“. Alles andere, was diese Integration anzeigt, folgt bereits Ihrer Gladys-Sprache, aber der Name eines Geräts und seiner Funktionen wird so gespeichert, wie er veröffentlicht wird, und muss daher hier gewählt werden — ebenso wie die Texte, die die UV-Szenenkarten an Ihre Szenen übergeben. Ein bereits zu Gladys hinzugefügtes Gerät behält die Namen, mit denen es erstellt wurde: Löschen Sie es und fügen Sie es über den Tab „Entdecken“ erneut hinzu, um es umzubenennen.",
+        "de": "Die Sprache, in der die Namen der Geräte und ihrer Funktionen geschrieben werden: „Indice UV“, „UV index“, „UV-Index“ oder „Índice UV“. Alles andere, was diese Integration anzeigt, folgt bereits deiner Gladys-Sprache, aber der Name eines Geräts und seiner Funktionen wird so gespeichert, wie er veröffentlicht wird, und muss daher hier gewählt werden — ebenso wie die Texte, die die UV-Szenenkarten an deine Szenen übergeben. Ein bereits zu Gladys hinzugefügtes Gerät behält die Namen, mit denen es erstellt wurde: Lösche es und füge es über den Tab „Entdecken“ erneut hinzu, um es umzubenennen.",
         "es": "El idioma en el que se escriben los nombres de los dispositivos y de sus funciones: «Indice UV», «UV index», «UV-Index» o «Índice UV». Todo lo demás que muestra esta integración ya sigue el idioma de su cuenta de Gladys, pero el nombre de un dispositivo y de sus funciones se guarda tal como se publica, por lo que hay que elegirlo aquí, al igual que los textos que las tarjetas de escena UV transmiten a sus escenas. Un dispositivo ya añadido a Gladys conserva los nombres con los que se creó: elimínelo y vuelva a añadirlo desde la pestaña «Descubrir» para cambiarle el nombre."
       },
       "required": false,
@@ -159,13 +159,13 @@
       "label": {
         "en": "Your locations",
         "fr": "Vos lieux",
-        "de": "Ihre Orte",
+        "de": "Deine Orte",
         "es": "Sus ubicaciones"
       },
       "description": {
         "en": "Use the buttons below to add, list and remove your locations. \"Add my Gladys houses\" adds them all in one click, from the houses you already placed on the map in Gladys. They are not fields of this form: a list you build as you go cannot be one, so everything about them happens under a button, and the answer displayed there is what shows you the list.",
         "fr": "Utilisez les boutons ci-dessous pour ajouter, lister et supprimer vos lieux. « Ajouter mes maisons Gladys » les ajoute tous en un clic, à partir des maisons que vous avez déjà placées sur la carte dans Gladys. Ce ne sont pas des champs de ce formulaire : une liste que l'on construit au fil de l'eau ne peut pas en être un, donc tout se passe sous un bouton et c'est la réponse affichée là qui vous montre la liste.",
-        "de": "Verwenden Sie die Schaltflächen unten, um Ihre Orte hinzuzufügen, aufzulisten und zu entfernen. „Meine Gladys-Zuhause hinzufügen“ fügt sie alle mit einem Klick hinzu, aus den Zuhause, die Sie in Gladys bereits auf der Karte platziert haben. Sie sind keine Felder dieses Formulars: Eine Liste, die nach und nach entsteht, kann keines sein. Daher geschieht alles unter einer Schaltfläche, und die dort angezeigte Antwort zeigt Ihnen die Liste.",
+        "de": "Verwende die Schaltflächen unten, um deine Orte hinzuzufügen, aufzulisten und zu entfernen. „Meine Gladys-Zuhause hinzufügen“ fügt sie alle mit einem Klick hinzu, aus den Zuhause, die du in Gladys bereits auf der Karte platziert haben. Sie sind keine Felder dieses Formulars: Eine Liste, die nach und nach entsteht, kann keines sein. Daher geschieht alles unter einer Schaltfläche, und die dort angezeigte Antwort zeigt dir die Liste.",
         "es": "Utilice los botones de abajo para añadir, listar y eliminar sus ubicaciones. «Añadir mis viviendas de Gladys» las añade todas con un clic, a partir de las viviendas que ya ha situado en el mapa en Gladys. No son campos de este formulario: una lista que se construye poco a poco no puede serlo, así que todo ocurre bajo un botón y es la respuesta mostrada allí la que le enseña la lista."
       }
     }
@@ -180,9 +180,9 @@
         "es": "Añadir una ubicación"
       },
       "description": {
-        "en": "Resolves the French postal code you type into a commune and adds a location watching it. Fill the latitude and the longitude in instead to add a point directly, anywhere in the world. Its device then shows up in the Discovery tab, and \"Show my locations\" lists it.",
+        "en": "Resolves the French postal code you type into a commune and adds a location watching it. Fill the latitude and the longitude in instead to add a point directly, anywhere in the world. Its device then shows up in the Discover tab, and \"Show my locations\" lists it.",
         "fr": "Résout le code postal saisi en commune et ajoute un lieu qui la surveille. Renseignez plutôt la latitude et la longitude pour ajouter un point directement, partout dans le monde. Son appareil apparaît ensuite dans l'onglet Découverte, et « Afficher mes lieux » le liste.",
-        "de": "Ordnet die eingegebene französische Postleitzahl einer Gemeinde zu und fügt einen Ort hinzu, der sie überwacht. Geben Sie stattdessen Breiten- und Längengrad ein, um direkt einen Punkt hinzuzufügen, überall auf der Welt. Sein Gerät erscheint dann im Tab „Entdecken“, und „Meine Orte anzeigen“ listet ihn auf.",
+        "de": "Ordnet die eingegebene französische Postleitzahl einer Gemeinde zu und fügt einen Ort hinzu, der sie überwacht. Gib stattdessen Breiten- und Längengrad ein, um direkt einen Punkt hinzuzufügen, überall auf der Welt. Sein Gerät erscheint dann im Tab „Entdecken“, und „Meine Orte anzeigen“ listet ihn auf.",
         "es": "Asocia el código postal francés que escriba a un municipio y añade una ubicación que lo vigila. Rellene en su lugar la latitud y la longitud para añadir un punto directamente, en cualquier parte del mundo. Su dispositivo aparece después en la pestaña «Descubrir», y «Mostrar mis ubicaciones» la lista."
       },
       "timeout_seconds": 30,
@@ -222,7 +222,7 @@
           "description": {
             "en": "The French postal code of the place to watch: five digits. Optional if you fill the two coordinates in below.",
             "fr": "Le code postal français du lieu à surveiller : cinq chiffres. Facultatif si vous renseignez les deux coordonnées ci-dessous.",
-            "de": "Die französische Postleitzahl des zu überwachenden Orts: fünf Ziffern. Optional, wenn Sie unten die beiden Koordinaten eingeben.",
+            "de": "Die französische Postleitzahl des zu überwachenden Orts: fünf Ziffern. Optional, wenn du unten die beiden Koordinaten eingibst.",
             "es": "El código postal francés del lugar que se va a vigilar: cinco cifras. Opcional si rellena las dos coordenadas de abajo."
           },
           "required": false,
@@ -245,7 +245,7 @@
           "description": {
             "en": "Only needed when the postal code covers several communes — 01000 is Bourg-en-Bresse, Péronnas and Saint-Denis-lès-Bourg. Run the action without it first: the answer lists the communes to choose from.",
             "fr": "Utile seulement si le code postal couvre plusieurs communes — 01000 désigne Bourg-en-Bresse, Péronnas et Saint-Denis-lès-Bourg. Lancez d'abord l'action sans le renseigner : la réponse liste les communes possibles.",
-            "de": "Nur nötig, wenn die Postleitzahl mehrere Gemeinden umfasst — 01000 steht für Bourg-en-Bresse, Péronnas und Saint-Denis-lès-Bourg. Führen Sie die Aktion zuerst ohne dieses Feld aus: Die Antwort listet die möglichen Gemeinden auf.",
+            "de": "Nur nötig, wenn die Postleitzahl mehrere Gemeinden umfasst — 01000 steht für Bourg-en-Bresse, Péronnas und Saint-Denis-lès-Bourg. Führe die Aktion zuerst ohne dieses Feld aus: Die Antwort listet die möglichen Gemeinden auf.",
             "es": "Solo es necesario si el código postal abarca varios municipios: 01000 corresponde a Bourg-en-Bresse, Péronnas y Saint-Denis-lès-Bourg. Ejecute primero la acción sin rellenarlo: la respuesta lista los municipios posibles."
           },
           "required": false,
@@ -268,7 +268,7 @@
           "description": {
             "en": "WGS-84 decimal degrees, -90 to 90. Filled in together with the longitude, this point is used as it is and the postal code above is then only a label — this is the way in for a place outside France.",
             "fr": "Degrés décimaux WGS-84, de -90 à 90. Renseignée avec la longitude, ce point est utilisé tel quel et le code postal ci-dessus ne sert plus que de libellé — c'est la voie d'entrée pour un lieu hors de France.",
-            "de": "Dezimalgrad WGS-84, von -90 bis 90. Zusammen mit dem Längengrad angegeben, wird dieser Punkt unverändert verwendet und die Postleitzahl oben dient nur noch als Bezeichnung — so fügen Sie einen Ort außerhalb Frankreichs hinzu.",
+            "de": "Dezimalgrad WGS-84, von -90 bis 90. Zusammen mit dem Längengrad angegeben, wird dieser Punkt unverändert verwendet und die Postleitzahl oben dient nur noch als Bezeichnung — so fügst du einen Ort außerhalb Frankreichs hinzu.",
             "es": "Grados decimales WGS-84, de -90 a 90. Si se rellena junto con la longitud, este punto se usa tal cual y el código postal de arriba ya solo sirve de etiqueta: es la forma de añadir un lugar fuera de Francia."
           },
           "required": false,
@@ -315,7 +315,7 @@
       "description": {
         "en": "Reads the houses you configured in Gladys and adds a location for each one that is not watched yet — no postal code to type. Pick a house to add that one only, or leave the field empty to add them all. A house you never placed on the map has no coordinates: locate it in Settings > Houses first. The houses are read once, when you click: a location added this way is an ordinary one, which you rename and remove like the others.",
         "fr": "Lit les maisons que vous avez configurées dans Gladys et ajoute un lieu pour chacune qui n'est pas déjà surveillée — aucun code postal à saisir. Choisissez une maison pour n'ajouter qu'elle, ou laissez le champ vide pour les ajouter toutes. Une maison jamais placée sur la carte n'a pas de coordonnées : localisez-la d'abord dans Réglages > Maisons. Les maisons sont lues une fois, au clic : un lieu ajouté ainsi est un lieu ordinaire, que vous renommez et supprimez comme les autres.",
-        "de": "Liest die in Gladys konfigurierten Zuhause und fügt für jedes, das noch nicht überwacht wird, einen Ort hinzu — ohne Postleitzahl einzugeben. Wählen Sie ein Zuhause, um nur dieses hinzuzufügen, oder lassen Sie das Feld leer, um alle hinzuzufügen. Ein Zuhause, das nie auf der Karte platziert wurde, hat keine Koordinaten: Verorten Sie es zuerst unter Einstellungen > Zuhause. Die Zuhause werden einmal gelesen, beim Klick: Ein so hinzugefügter Ort ist ein gewöhnlicher Ort, den Sie wie die anderen umbenennen und entfernen.",
+        "de": "Liest die in Gladys konfigurierten Zuhause und fügt für jedes, das noch nicht überwacht wird, einen Ort hinzu — ohne Postleitzahl einzugeben. Wähle ein Zuhause, um nur dieses hinzuzufügen, oder lass das Feld leer, um alle hinzuzufügen. Ein Zuhause, das nie auf der Karte platziert wurde, hat keine Koordinaten: Verorte es zuerst unter Einstellungen > Zuhause. Die Zuhause werden einmal gelesen, beim Klick: Ein so hinzugefügter Ort ist ein gewöhnlicher Ort, den du wie die anderen umbenennst und entfernst.",
         "es": "Lee las viviendas que ha configurado en Gladys y añade una ubicación por cada una que aún no se vigila, sin código postal que escribir. Elija una vivienda para añadir solo esa, o deje el campo vacío para añadirlas todas. Una vivienda que nunca se situó en el mapa no tiene coordenadas: ubíquela primero en Configuración > Viviendas. Las viviendas se leen una vez, al hacer clic: una ubicación añadida así es una ubicación normal, que se renombra y elimina como las demás."
       },
       "timeout_seconds": 30,
@@ -383,7 +383,7 @@
       "description": {
         "en": "Stops watching the location whose number you pick here — the numbers are the ones \"Show my locations\" lists. Its Gladys device is not deleted (an integration cannot do that): delete it yourself if you no longer want it.",
         "fr": "Arrête de surveiller le lieu dont vous choisissez le numéro ici — ce sont les numéros qu'affiche « Afficher mes lieux ». Son appareil Gladys n'est pas supprimé (une intégration ne peut pas le faire) : supprimez-le vous-même si vous n'en voulez plus.",
-        "de": "Beendet die Überwachung des Orts, dessen Nummer Sie hier wählen — es sind die Nummern, die „Meine Orte anzeigen“ auflistet. Sein Gladys-Gerät wird nicht gelöscht (das kann eine Integration nicht): Löschen Sie es selbst, wenn Sie es nicht mehr möchten.",
+        "de": "Beendet die Überwachung des Orts, dessen Nummer du hier wählst — es sind die Nummern, die „Meine Orte anzeigen“ auflistet. Sein Gladys-Gerät wird nicht gelöscht (das kann eine Integration nicht): Lösche es selbst, wenn du es nicht mehr möchtest.",
         "es": "Deja de vigilar la ubicación cuyo número elija aquí; son los números que lista «Mostrar mis ubicaciones». Su dispositivo de Gladys no se elimina (una integración no puede hacerlo): elimínelo usted mismo si ya no lo quiere."
       },
       "timeout_seconds": 15,
@@ -600,7 +600,7 @@
           "description": {
             "en": "Run the action once unchecked to see which location would be removed.",
             "fr": "Lancez l'action une fois sans cocher pour voir quel lieu serait supprimé.",
-            "de": "Führen Sie die Aktion einmal ohne Häkchen aus, um zu sehen, welcher Ort entfernt würde.",
+            "de": "Führe die Aktion einmal ohne Häkchen aus, um zu sehen, welcher Ort entfernt würde.",
             "es": "Ejecute la acción una vez sin marcar la casilla para ver qué ubicación se eliminaría."
           },
           "required": false,

@@ -79,7 +79,7 @@ export const UV_LEVEL_ADVICE = {
   1: {
     en: 'No protection needed. You can safely stay outside.',
     fr: 'Aucune protection nécessaire. Vous pouvez rester dehors sans risque.',
-    de: 'Kein Schutz erforderlich. Sie können unbedenklich draußen bleiben.',
+    de: 'Kein Schutz erforderlich. Du kannst unbedenklich draußen bleiben.',
     es: 'No se necesita protección. Puede permanecer al aire libre sin riesgo.',
   },
   2: {

@@ -248,7 +248,7 @@ export function buildOverviewContent(entries) {
         bodyText({
           en: 'No location yet. Add one in the configuration of the UV index integration.',
           fr: "Aucun lieu pour l'instant. Ajoutez-en un dans la configuration de l'intégration Indice UV.",
-          de: 'Noch kein Ort. Fügen Sie einen in der Konfiguration der Integration Indice UV hinzu.',
+          de: 'Noch kein Ort. Füge einen in der Konfiguration der Integration Indice UV hinzu.',
           es: 'Todavía no hay ninguna ubicación. Añada una en la configuración de la integración Indice UV.',
         }),
       ],
@@ -315,7 +315,7 @@ export function createWidgets({ getConfig, watchedLocations, locationOfDevice, r
             bodyText({
               en: 'This device is no longer watched: its location was removed. Pick another device in the widget settings.',
               fr: "Cet appareil n'est plus suivi : son lieu a été supprimé. Choisissez un autre appareil dans les réglages du widget.",
-              de: 'Dieses Gerät wird nicht mehr überwacht: Sein Ort wurde entfernt. Wählen Sie in den Widget-Einstellungen ein anderes Gerät.',
+              de: 'Dieses Gerät wird nicht mehr überwacht: Sein Ort wurde entfernt. Wähle in den Widget-Einstellungen ein anderes Gerät.',
               es: 'Este dispositivo ya no se vigila: su ubicación se ha eliminado. Elija otro dispositivo en los ajustes del widget.',
             }),
           ],

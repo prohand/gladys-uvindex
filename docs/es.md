@@ -36,7 +36,7 @@ añade una segunda vez.
 
 ## Añadir una ubicación
 
-En la pantalla de configuración de la integración, pulse **«Añadir una
+En la pestaña **Configuración** de la integración, pulse **«Añadir una
 ubicación»** y rellene el formulario:
 
 - **Nombre de la ubicación**: opcional. Si lo deja vacío, se usa el nombre del
@@ -143,8 +143,8 @@ que una fuente que responde con la hora de ayer se muestra como lo que es.
 
 ## En el panel
 
-El editor del panel ofrece dos widgets (Gladys 5.1 o posterior), con el nombre
-de la integración:
+El editor del panel (**Panel → Editar → Nuevo widget**) ofrece dos widgets
+(Gladys 5.1 o posterior), en la sección **Widgets de integraciones**:
 
 - **Índice UV de una ubicación**: el índice actual, el máximo de hoy y el índice
   con cielo despejado, **la curva de previsión horaria del día** con el pico
@@ -162,7 +162,8 @@ lo indica: elija otro dispositivo en sus ajustes.
 ## En las escenas
 
 La integración añade dos tarjetas al editor de escenas (Gladys 5.1 o posterior),
-en la categoría **Integraciones**.
+en la categoría **Integraciones**: un **Activador de integración** y una
+**Acción de integración**.
 
 ### Disparador «Nivel de exposición UV cambiado»
 
@@ -185,7 +186,7 @@ Conviene saber:
 - La primera lectura tras el arranque de la integración es una referencia y no
   activa nada: un reinicio no es un cambio en el cielo.
 - Para reaccionar a un **umbral** («en cuanto el nivel sea al menos 3»), utilice
-  en su lugar el disparador estándar de la función «Nivel de exposición UV» del
+  en su lugar el activador **Cambio de estado del dispositivo** de la función «Nivel de exposición UV» del
   dispositivo.
 - Los textos (denominación, consejo) se escriben en el **idioma de los nombres
   de los dispositivos** elegido en los ajustes generales.
@@ -227,7 +228,7 @@ demás responden igualmente. Una ubicación para la que la fuente no tiene valor
 indica «sin datos», nunca un nivel. A diferencia de los widgets, este botón nunca
 muestra un valor antiguo: una fuente caída aparece como caída.
 
-La pantalla **Supervisión** también muestra el estado de la integración: mientras
+La pestaña **Supervisión** también muestra el estado de la integración: mientras
 no haya ninguna ubicación configurada, indica que hay que añadir una.
 
 ## De dónde proceden los datos

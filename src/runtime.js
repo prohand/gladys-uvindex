@@ -30,7 +30,7 @@ import { forgetStatus, holdStatus, releaseStatus, reportStatus } from './status.
 export const NOT_CONFIGURED_MESSAGE = {
   en: 'Add a location to start following the UV index.',
   fr: "Ajoutez un lieu pour suivre l'indice UV.",
-  de: 'Fügen Sie einen Ort hinzu, um den UV-Index zu verfolgen.',
+  de: 'Füge einen Ort hinzu, um den UV-Index zu verfolgen.',
   es: 'Añada una ubicación para seguir el índice UV.',
 };
 
@@ -71,9 +71,7 @@ export function createRuntime(gladys, { blueprints = DEVICE_BLUEPRINTS } = {}) {
 
     try {
       const response = await gladys.publishDiscoveredDevices(devices);
-      logger.info(
-        `Published ${response?.count ?? devices.length} device(s) to the Discovery screen`,
-      );
+      logger.info(`Published ${response?.count ?? devices.length} device(s) to the Discover tab`);
       releaseStatus(gladys);
       return configured;
     } catch (err) {

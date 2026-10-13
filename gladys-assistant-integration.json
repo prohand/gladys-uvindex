@@ -8,8 +8,8 @@
     "de": "UV-Index für die Orte deiner Wahl, aus der CAMS-Vorhersage von Copernicus.",
     "es": "Índice UV de las ubicaciones que elija, según la previsión CAMS de Copernicus."
   },
-  "version": "2.4.0",
-  "docker_image": "ghcr.io/prohand/gladys-uvindex:2.4.0",
+  "version": "2.5.0",
+  "docker_image": "ghcr.io/prohand/gladys-uvindex:2.5.0",
   "gladys_version": ">=5.2.0",
   "cover_image": "https://raw.githubusercontent.com/prohand/gladys-uvindex/main/cover.jpg",
   "categories": ["environment"],

@@ -65,7 +65,7 @@ change or report it. Consequences worth internalising:
   failed action never blocks the queue.
 - **`commit` is a write, then a publication, and they fail differently.** A
   failed `setConfig` throws (nothing changed). A failed re-publication does NOT
-  undo the write: it comes back as an `{ en, fr }` sentence — "saved, but
+  undo the write: it comes back as an `{ en, fr, de, es }` sentence — "saved, but
   publishing the devices failed: <reason>" — that the action appends to its
   answer, and the action stops promising the Discovery tab.
 - **Coordinates AND postal codes travel as TEXT** (`src/coordinates.js`), in the
@@ -89,14 +89,14 @@ names the device it leaves behind.
 The SDK acks a thrown handler error as a plain `error: e.message` string, which
 loses the multi-language message. Every expected, user-facing outcome — an
 unreadable postal code, an ambiguous one, a duplicate point — is **returned** as
-an `{ en, fr }` object; only unexpected failures throw. That message is also the
+an `{ en, fr, de, es }` object; only unexpected failures throw. That message is also the
 only thing the Configuration screen displays of what this integration has to say,
 hence the listing being an action too.
 
 ### Names are the only text this integration has to translate itself
 
 Everything displayed — action results, connection status — is returned as
-`{ en, fr }` and rendered by the core in the reader's language. Device and
+`{ en, fr, de, es }` and rendered by the core in the reader's language. Device and
 feature **names** cannot work that way: they are plain strings stored in
 `t_device_feature.name` when the user creates the device, and the host API
 exposes no user language at all.
@@ -104,7 +104,8 @@ exposes no user language at all.
 Hence `src/language.js`: `config.language`, a manifest `select`, **`fr` by
 default** (the postal code lookup is French, so the user base is). It is threaded
 through `buildDevice`/`buildStates`/`poll` as an argument rather than read from a
-module-level variable, so the mapping stays testable in both languages. The two
+module-level variable, so the mapping stays testable in every language
+(`fr`, `en`, `de`, `es`; `inLanguage` falls back on English). The two
 TEXT states follow it too — a stored state is a string like a name, translated by
 nobody downstream.
 
@@ -112,6 +113,10 @@ Re-publishing does NOT rename an existing device: the core upserts the params of
 the devices already created, never their name. A language switch therefore
 applies to the devices still to be created, which the manifest description and
 `docs/` both say.
+
+User-facing text is `{ en, fr, de, es }` — the manifest texts, every message,
+every widget text (`inEveryLanguage` builds the composed ones) — and
+`docs/en.md`, `docs/fr.md`, `docs/de.md`, `docs/es.md` stay in sync.
 
 ### The Gladys houses are a second way in, and a permission
 
@@ -314,7 +319,7 @@ pinned by a test. The specs live in the core repo,
   number, its level and its advice on a card can never disagree — which is why
   the tiles are inline values and not bound to the device features.
   `uvStation.refresh` calls `nudgeWidgets` after each cycle. Every text is
-  `{ en, fr }`: the core renders a card in the READER's language, so
+  `{ en, fr, de, es }`: the core renders a card in the READER's language, so
   `config.language` plays no part there.
 - **The chart needs instants**: `toIsoInstant` APPENDS Open-Meteo's
   `utc_offset_seconds` to the local wall-clock hour — text in, text out, still no

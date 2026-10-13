@@ -167,6 +167,13 @@ test('the names follow the configured language', () => {
   assert.match(french.features[0].name, /^Indice UV$/);
   assert.match(english.features[0].name, /^UV index$/);
   assert.equal(french.external_id, english.external_id, 'the identity is language-free');
+
+  const german = buildDevice(gladys, location, 'de');
+  const spanish = buildDevice(gladys, location, 'es');
+  assert.equal(german.name, 'UV-Index — Maison');
+  assert.equal(spanish.name, 'Índice UV — Maison');
+  assert.match(german.features[0].name, /^UV-Index$/);
+  assert.match(spanish.features[0].name, /^Índice UV$/);
 });
 
 test('a reading becomes one state per feature', () => {
@@ -203,6 +210,13 @@ test('the text states are written in the language of the features carrying them'
     state.device_feature_external_id.endsWith(FEATURE.EXPOSURE_LEVEL_TEXT),
   );
   assert.equal(text.text, 'High');
+
+  const textIn = (language) =>
+    buildStates(ids, { uvIndex: 7, level: UV_LEVELS.HIGH }, language).find((state) =>
+      state.device_feature_external_id.endsWith(FEATURE.EXPOSURE_LEVEL_TEXT),
+    ).text;
+  assert.equal(textIn('de'), 'Hoch');
+  assert.equal(textIn('es'), 'Alto');
 });
 
 test('the data timestamp follows the language of the device', () => {
@@ -216,6 +230,8 @@ test('the data timestamp follows the language of the device', () => {
 
   assert.equal(stamp('fr'), '06/08/2026 à 14:00');
   assert.equal(stamp('en'), '2026-08-06 14:00');
+  assert.equal(stamp('de'), '06.08.2026 um 14:00');
+  assert.equal(stamp('es'), '06/08/2026 a las 14:00');
 });
 
 test('the data timestamp is not published without the index it dates', () => {

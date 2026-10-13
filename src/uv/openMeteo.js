@@ -372,6 +372,8 @@ export const openMeteoProvider = {
   name: {
     en: 'Open-Meteo (CAMS, Copernicus)',
     fr: 'Open-Meteo (CAMS, Copernicus)',
+    de: 'Open-Meteo (CAMS, Copernicus)',
+    es: 'Open-Meteo (CAMS, Copernicus)',
   },
 
   /**

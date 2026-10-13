@@ -138,7 +138,7 @@ claims the WHO named it. See [`src/uv/scale.js`](./src/uv/scale.js).
 │     ├─ index.js                    #   device registry
 │     ├─ uvStation.js                #   one device per location
 │     └─ providerTest.js             #   the "Test the UV provider" button
-├─ docs/{en,fr}.md                   # user documentation, re-hosted by Gladys
+├─ docs/{en,fr,de,es}.md             # user documentation, re-hosted by Gladys
 ├─ gladys-assistant-integration.json # manifest (name, config schema, actions, image)
 ├─ Dockerfile                        # Node 24 Alpine, read-only rootfs ready
 ├─ tools/cover.mjs                   # the cover's source: HTML, screenshotted

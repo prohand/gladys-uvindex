@@ -210,7 +210,8 @@ votre maison, puis un message « Pic UV {{0.1.uv_index_max_today}}
   Un appareil déjà ajouté **conserve** les noms avec lesquels il a été créé :
   changez la langue, puis supprimez et rajoutez l'appareil depuis la Découverte
   pour le renommer. Les textes transmis aux scènes (libellé du niveau, conseil)
-  suivent aussi ce réglage.
+  suivent aussi ce réglage. Les choix sont le français (par défaut), l'anglais,
+  l'allemand et l'espagnol.
 - **Intervalle de rafraîchissement** — 30 minutes par défaut, entre 10 minutes et
   6 heures. La prévision CAMS est horaire : descendre nettement sous la
   demi-heure n'apporte rien de plus. Tous les lieux sont lus en une seule

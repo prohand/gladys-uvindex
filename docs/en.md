@@ -203,7 +203,8 @@ are the ones of the action in your scene: the editor offers them.
   are stored as they are the moment you create the device. A device already added
   **keeps** the names it was created with: change the language, then delete the
   device and add it again from the Discovery tab to rename it. The texts handed
-  to your scenes (level label, advice) follow this setting too.
+  to your scenes (level label, advice) follow this setting too. The choices are
+  French (the default), English, German and Spanish.
 - **Refresh interval** — 30 minutes by default, between 10 minutes and 6 hours.
   The CAMS forecast is hourly, so there is nothing to gain from going much below
   half an hour. Every location is read in a single request, and a value is only

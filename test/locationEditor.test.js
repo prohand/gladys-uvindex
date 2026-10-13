@@ -525,9 +525,49 @@ test('every answer is a multi-language object, never a thrown string', async () 
     await editor.actions.remove_location({ location: '1' }),
   ];
   for (const answer of answers) {
-    assert.equal(typeof answer.en, 'string', JSON.stringify(answer));
-    assert.equal(typeof answer.fr, 'string', JSON.stringify(answer));
+    assertFourLanguages(answer);
   }
+});
+
+/** An answer the core can show in each language of the Gladys interface. */
+function assertFourLanguages(answer) {
+  assert.deepEqual(Object.keys(answer).sort(), ['de', 'en', 'es', 'fr'], JSON.stringify(answer));
+  for (const text of Object.values(answer)) {
+    assert.equal(typeof text, 'string', JSON.stringify(answer));
+    assert.ok(text.length > 0, JSON.stringify(answer));
+  }
+}
+
+test('the answers of the success paths speak German and Spanish too', async () => {
+  const { editor } = setup({
+    houses: [house('Maison', 47.2172, -1.5534), house('Chalet'), house('Bureau', 48.86, 2.35)],
+    createdDevice: { name: 'Indice UV — Nantes' },
+  });
+  const added = await editor.actions.add_location({ postal_code: '44300' });
+  assertFourLanguages(added);
+  assert.match(added.de, /Ort 1 „Nantes“ hinzugefügt/);
+  assert.match(added.es, /Ubicación 1 «Nantes» añadida/);
+
+  const imported = await editor.actions.import_houses();
+  assertFourLanguages(imported);
+  assert.match(imported.de, /Bereits überwacht: „Maison“/);
+  assert.match(imported.es, /Configuración > Viviendas/);
+  assert.match(imported.de, /Einstellungen > Zuhause/);
+
+  assertFourLanguages(await editor.actions.list_locations());
+  assertFourLanguages(await editor.actions.remove_location({ location: '1' }));
+  const removed = await editor.actions.remove_location({ location: '1', confirmation: true });
+  assertFourLanguages(removed);
+  assert.match(removed.de, /Tab „Geräte“/);
+  assert.match(removed.es, /pestaña «Dispositivos»/);
+});
+
+test('a publication warning is appended in every language', async () => {
+  const { editor } = setup({ publishError: new Error('refused') });
+  const answer = await editor.actions.add_location({ postal_code: '44300' });
+  assertFourLanguages(answer);
+  assert.match(answer.de, /refused/);
+  assert.match(answer.es, /refused/);
 });
 
 test('what is written to the configuration is what can be read back', async () => {

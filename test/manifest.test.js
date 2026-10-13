@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { DEFAULT_CONFIG, POLL_FREQUENCY_LIMITS } from '../src/config.js';
 import { DEVICE_BLUEPRINTS } from '../src/devices/index.js';
-import { DEFAULT_LANGUAGE, LANGUAGES } from '../src/language.js';
+import { DEFAULT_LANGUAGE, LANGUAGES, MESSAGE_LANGUAGES } from '../src/language.js';
 import { createLocationEditor } from '../src/locationEditor.js';
 import { MAX_LOCATIONS } from '../src/locations.js';
 import {
@@ -167,8 +167,12 @@ test('the level filter offers exactly the 0-5 scale, worded like the features', 
   );
   for (const option of level.options) {
     const wording = UV_LEVEL_LABELS[Number(option.value)];
-    assert.ok(option.label.en.endsWith(wording.en), `option ${option.value} (en)`);
-    assert.ok(option.label.fr.endsWith(wording.fr), `option ${option.value} (fr)`);
+    for (const language of MESSAGE_LANGUAGES) {
+      assert.ok(
+        option.label[language].endsWith(wording[language]),
+        `option ${option.value} (${language})`,
+      );
+    }
   }
 });
 
@@ -347,6 +351,8 @@ test('the two reporting actions announce the SAME entry format', () => {
     assert.match(reporting.description.fr, /•/, `${key} documents the entry marker`);
     assert.match(reporting.description.fr, /numéro/i, `${key} documents the entry number`);
     assert.match(reporting.description.en, /•/);
+    assert.match(reporting.description.de, /•.*Nummer/);
+    assert.match(reporting.description.es, /•.*número/);
   }
 });
 
@@ -367,6 +373,7 @@ test('the store description fits the catalog card', () => {
   // 10-100 characters PER LANGUAGE — the card is one line, and a long
   // description rejects the whole manifest at install time.
   assert.ok(manifest.description.en, 'an English description is mandatory');
+  assert.deepEqual(Object.keys(manifest.description).sort(), [...MESSAGE_LANGUAGES].sort());
   for (const [language, text] of Object.entries(manifest.description)) {
     assert.ok(
       text.length >= 10 && text.length <= 100,
@@ -375,15 +382,25 @@ test('the store description fits the catalog card', () => {
   }
 });
 
-test('every human text is a multi-language object', () => {
+test('every human text is a multi-language object, in the four languages of Gladys', () => {
   // `label`, `description` and `placeholder` are ALWAYS { en, … } objects,
   // never bare strings — including a placeholder that looks like a constant.
+  // English is the one the store requires; French, German and Spanish are the
+  // other languages of the Gladys interface, and every text carries them all.
   const check = (value, path) => {
     if (value === undefined) {
       return;
     }
     assert.equal(typeof value, 'object', `${path} must be a { en, … } object, not a bare value`);
     assert.equal(typeof value.en, 'string', `${path}.en is mandatory`);
+    assert.deepEqual(
+      Object.keys(value).sort(),
+      [...MESSAGE_LANGUAGES].sort(),
+      `${path} must carry exactly ${MESSAGE_LANGUAGES.join(', ')}`,
+    );
+    for (const language of MESSAGE_LANGUAGES) {
+      assert.ok(value[language].trim().length > 0, `${path}.${language} is empty`);
+    }
   };
 
   const checkField = (field, path) => {

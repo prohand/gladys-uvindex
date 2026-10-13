@@ -15,6 +15,7 @@
 import { createLogger } from '@gladysassistant/integration-sdk';
 import { errorReason } from '../errors.js';
 import { RETRY } from '../http.js';
+import { inEveryLanguage } from '../language.js';
 import { LOCATION_LINE_SEPARATOR, locationLine, positionOf } from '../locations.js';
 import { readUvIndexes } from '../uv/index.js';
 import { formatMeasuredAt } from '../uv/measuredAt.js';
@@ -25,10 +26,20 @@ const logger = createLogger({ name: 'provider-test' });
 const NO_LOCATION_MESSAGE = {
   en: 'No location with usable coordinates yet. Add one with "Add a location".',
   fr: 'Aucun lieu avec des coordonnées utilisables. Ajoutez-en un avec « Ajouter un lieu ».',
+  de: 'Noch kein Ort mit verwendbaren Koordinaten. Fügen Sie einen mit „Ort hinzufügen“ hinzu.',
+  es: 'Todavía no hay ninguna ubicación con coordenadas utilizables. Añada una con «Añadir una ubicación».',
 };
 
 /** What a line says instead of a level when the source has no value. */
-const NO_DATA = { en: 'no data', fr: 'pas de donnée' };
+const NO_DATA = { en: 'no data', fr: 'pas de donnée', de: 'keine Daten', es: 'sin datos' };
+
+/** The words of a reading line, per language. */
+const LINE_WORDS = {
+  en: { maxToday: 'max today', updated: 'updated' },
+  fr: { maxToday: 'max du jour', updated: 'màj' },
+  de: { maxToday: 'Tagesmaximum', updated: 'aktualisiert' },
+  es: { maxToday: 'máx. del día', updated: 'actualizado' },
+};
 
 /**
  * Why a location could not be read, WITHOUT naming it (the line already does).
@@ -39,11 +50,13 @@ export function failureDetail(err) {
   return {
     en: `UV refresh failed: ${reason}`,
     fr: `le rafraîchissement de l'indice UV a échoué : ${reason}`,
+    de: `UV-Aktualisierung fehlgeschlagen: ${reason}`,
+    es: `error al actualizar el índice UV: ${reason}`,
   };
 }
 
 /**
- * One location's line, in both languages.
+ * One location's line, in every language.
  *
  * A missing level reads "no data": showing the wording of level 0 ("None")
  * would claim the sun is down when the source simply said nothing — the same
@@ -52,31 +65,26 @@ export function failureDetail(err) {
 export function readingLine(reading) {
   // The data timestamp answers the other half of "is it working?": a provider
   // that responds with yesterday's hour is up and still wrong.
-  const stampedIn = (language) => {
+  return inEveryLanguage((language) => {
+    const words = LINE_WORDS[language];
     const stamp = formatMeasuredAt(reading.measuredAt, language);
-    return stamp === null ? '' : `, ${language === 'en' ? 'updated' : 'màj'} ${stamp}`;
-  };
-  const levelIn = (language) => (UV_LEVEL_LABELS[reading.level] ?? NO_DATA)[language];
-  return {
-    en:
-      `UV ${reading.uvIndex ?? '—'} (${levelIn('en')}), ` +
-      `max today ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}${stampedIn('en')}`,
-    fr:
-      `UV ${reading.uvIndex ?? '—'} (${levelIn('fr')}), ` +
-      `max du jour ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}${stampedIn('fr')}`,
-  };
+    const stamped = stamp === null ? '' : `, ${words.updated} ${stamp}`;
+    const level = (UV_LEVEL_LABELS[reading.level] ?? NO_DATA)[language];
+    return (
+      `UV ${reading.uvIndex ?? '—'} (${level}), ` +
+      `${words.maxToday} ${reading.uvIndexMaxToday ?? '—'} — ${reading.provider}${stamped}`
+    );
+  });
 }
 
-/** A header plus one line per location, in both languages. */
+/** A header plus one line per location, in every language. */
 function report(header, lines) {
-  const join = (language) =>
-    lines
-      .map((line) => locationLine(line.position, line.name, line[language]))
-      .join(LOCATION_LINE_SEPARATOR);
-  return {
-    en: `${header.en}${LOCATION_LINE_SEPARATOR}${join('en')}`,
-    fr: `${header.fr}${LOCATION_LINE_SEPARATOR}${join('fr')}`,
-  };
+  return inEveryLanguage((language) =>
+    [
+      header[language],
+      ...lines.map((line) => locationLine(line.position, line.name, line[language])),
+    ].join(LOCATION_LINE_SEPARATOR),
+  );
 }
 
 /**
@@ -85,7 +93,7 @@ function report(header, lines) {
  * others, and a bare error naming no location helps nobody.
  * @param {{ locations: object[] }} config the whole configuration (for the numbering)
  * @param {object[]} locations the watched locations
- * @returns {Promise<{ en: string, fr: string }>}
+ * @returns {Promise<Record<string, string>>} `{ en, fr, de, es }`
  */
 export async function testProvider(config, locations) {
   if (locations.length === 0) {
@@ -112,10 +120,14 @@ export async function testProvider(config, locations) {
       ? {
           en: `UV provider OK — ${locations.length} location(s):`,
           fr: `Fournisseur UV OK — ${locations.length} lieu(x) :`,
+          de: `UV-Anbieter OK — ${locations.length} Ort(e):`,
+          es: `Proveedor UV OK — ${locations.length} ubicación(es):`,
         }
       : {
           en: `UV provider — ${failed} of ${locations.length} location(s) failing:`,
           fr: `Fournisseur UV — ${failed} lieu(x) en échec sur ${locations.length} :`,
+          de: `UV-Anbieter — ${failed} von ${locations.length} Ort(en) fehlgeschlagen:`,
+          es: `Proveedor UV — ${failed} de ${locations.length} ubicación(es) con error:`,
         };
   return report(header, lines);
 }

@@ -6,6 +6,10 @@ All notable changes to this integration are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.5.1] - 2026-10-23
+
+- Maintenance release, no functional change.
+
 ## [2.5.0] - 2026-10-13
 
 ### Added
@@ -125,7 +129,8 @@ First public release.
 - UV index integration with locations added by postal code
 - Redraw the catalog cover around the UV index itself
 
-[Unreleased]: https://github.com/prohand/gladys-uvindex/compare/v2.5.0...HEAD
+[Unreleased]: https://github.com/prohand/gladys-uvindex/compare/v2.5.1...HEAD
+[2.5.1]: https://github.com/prohand/gladys-uvindex/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/prohand/gladys-uvindex/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/prohand/gladys-uvindex/compare/v2.3.2...v2.4.0
 [2.3.2]: https://github.com/prohand/gladys-uvindex/compare/v2.3.1...v2.3.2

@@ -6,6 +6,15 @@ All notable changes to this integration are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Search keywords for the Gladys integration catalog (ultraviolet, sunburn, sunscreen, postal code…).
+
+### Changed
+
+- Requires Gladys 5.3.0 (the catalog keywords need it).
+- Gladys JavaScript SDK 0.16.0.
+
 ## [2.5.1] - 2026-10-23
 
 - Maintenance release, no functional change.

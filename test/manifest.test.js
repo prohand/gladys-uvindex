@@ -69,6 +69,11 @@ const CATALOG_CATEGORIES = [
   'notifications',
   'assistants',
   'services',
+  // Opened by the store with Gladys 5.3.
+  'transport',
+  'vehicles',
+  'servers',
+  'leisure',
 ];
 
 // Every widget and scene action key the code registers.
@@ -581,6 +586,46 @@ test('declaring widgets and scene cards requires a range starting at 5.1.0', () 
     startsAtLeast(5, 1),
     `widgets and scene cards require gladys_version >=5.1.0, got "${manifest.gladys_version}"`,
   );
+});
+
+test('the search keywords are 1 to 10 distinct terms of 2 to 30 characters', () => {
+  // Search-only terms of the catalog (Gladys 5.3), never displayed: what a user
+  // may type that the name and the description do not already say. The store
+  // compares them trimmed and lowercased, and refuses the manifest otherwise.
+  assert.ok(Array.isArray(manifest.keywords), 'keywords must be declared');
+  assert.ok(
+    manifest.keywords.length >= 1 && manifest.keywords.length <= 10,
+    `keywords must hold 1 to 10 terms, got ${manifest.keywords.length}`,
+  );
+  const normalized = manifest.keywords.map((keyword) => keyword.trim().toLowerCase());
+  for (const keyword of normalized) {
+    assert.ok(
+      keyword.length >= 2 && keyword.length <= 30,
+      `keyword "${keyword}" must hold 2 to 30 characters`,
+    );
+  }
+  assert.equal(new Set(normalized).size, normalized.length, 'keywords are unique');
+});
+
+test('no countries restrict the catalog shelves', () => {
+  // The postal code lookup is French, the data is not: a location anywhere is
+  // added by its coordinates. Declaring `countries` would hide the integration
+  // from the browse views of every instance located elsewhere.
+  assert.equal(manifest.countries, undefined);
+});
+
+test('declaring keywords, countries or music requires a range starting at 5.3.0', () => {
+  // Same allowlist, same silent refusal: these fields are only readable from
+  // Gladys 5.3.0 on, and the store rejects a manifest that declares them with a
+  // lower minimum.
+  for (const field of ['keywords', 'countries', 'music']) {
+    if (manifest[field] !== undefined) {
+      assert.ok(
+        startsAtLeast(5, 3),
+        `${field} requires gladys_version >=5.3.0, got "${manifest.gladys_version}"`,
+      );
+    }
+  }
 });
 
 test('the manifest declares the cloud transport only', () => {

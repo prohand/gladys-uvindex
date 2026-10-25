@@ -7,6 +7,8 @@ apparaît dans l'onglet **Découverte**, prêt à être ajouté à Gladys.
 Aucun compte à créer, aucune clé d'API à saisir : les deux sources utilisées sont
 des données ouvertes publiques.
 
+> Nécessite **Gladys 5.3.0** ou plus récent.
+
 ## Ajouter vos maisons Gladys, en un clic
 
 Vous avez déjà dit à Gladys où vous habitez : c'est la carte de **Réglages >

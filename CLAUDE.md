@@ -132,8 +132,8 @@ every house not already watched into a location.
   **403**, which is why `HOUSE_ACCESS_DENIED` exists: it is not an outage, and
   the only fix is re-installing the integration. It needs Gladys 4.85.0, the
   version that opened the endpoint and accepts the field — `gladys_version` is
-  `>=5.2.0` for the house picker below (and `>=5.1.0` would do for the widgets
-  and scene cards).
+  `>=5.3.0` for the catalog `keywords` (`>=5.2.0` would do for the house picker
+  below, `>=5.1.0` for the widgets and scene cards).
 - **`latitude`/`longitude` are `null` for a house never placed on the map.**
   `Number(null)` is 0, so they go through `toCoordinate`, and such a house is
   named in the answer rather than watched off the coast of Ghana.
@@ -145,7 +145,7 @@ every house not already watched into a location.
   `findLocationAtPoint` duplicate check — a house moved in Gladys therefore
   becomes a second location, which is the same rule as everywhere else here.
 - **One house or all.** The optional `house` field of `import_houses` is a
-  select with `source: "houses"` (Gladys 5.2, hence the floor): the core lists
+  select with `source: "houses"` (Gladys 5.2, which the floor covers): the core lists
   the houses by name and hands over the `selector`, matched against the houses
   read at the click. Empty means every house, as before the field; a selector
   matching nothing (house deleted since) is refused, never widened to every
@@ -263,7 +263,8 @@ workflow rewrites both.
 `categories` (Gladys 4.86+) is what puts the integration on a catalog shelf; the
 vocabulary is `climate`, `lighting`, `energy`, `security`, `multimedia`,
 `appliances`, `environment`, `protocols`, `network`, `notifications`,
-`assistants`, `services`, and this one declares **`environment`** — the shelf the
+`assistants`, `services` (plus `transport`, `vehicles`, `servers`, `leisure`
+since Gladys 5.3), and this one declares **`environment`** — the shelf the
 store's own `data/category-fallback.json` already assigned it, alongside
 `gladys-openweather` and `gladys-meteo-france`. `climate` in this vocabulary is
 heating and air conditioning, not the weather.
@@ -273,11 +274,16 @@ heating and air conditioning, not the weather.
   with a warning in the store's `rejected.json`, and the integration is indexed
   with no shelf at all. Like the cover image, the failure is a thing that does
   not appear rather than an error anyone sees, hence the test.
-- **Declaring it forces `gladys_version` to `>=4.86.0`** (now `>=5.2.0`, for the
-  widgets and scene cards and the `houses` select). Older cores validate
+- **Declaring it forces `gladys_version` to `>=4.86.0`** (now `>=5.3.0`, for the
+  widgets and scene cards, the `houses` select and the `keywords`). Older cores validate
   the manifest against a strict top-level allowlist and reject the whole file on
   an unknown field. The store enforces the coupling as an error; both sides are
   pinned in `test/manifest.test.js`.
+- **`keywords` (Gladys 5.3) are search-only terms**: 1-10 unique strings of 2-30
+  characters, never displayed, for what a user would type that the name and the
+  description do not say. **`countries` stays undeclared**: the postal code is
+  French, the data is not, and a declared list would hide the integration from
+  the browse views of every instance located elsewhere.
 
 ### The cover is validated by the store, and failing is silent
 
@@ -304,7 +310,7 @@ sun, no flat areas — is ~270 KB as a PNG at 800×534. As JPEG it is ~55 KB.
 
 `widgets`, `scene_triggers` and `scene_actions` are manifest fields Gladys 5.1.0
 introduced (SDK 0.14.0); older cores reject the whole manifest on them, hence
-`gladys_version` `>=5.1.0` at least (`>=5.2.0` today, for `source: "houses"`),
+`gladys_version` `>=5.1.0` at least (`>=5.3.0` today, for the catalog `keywords`),
 pinned by a test. The specs live in the core repo,
 `docs/specs/external-integrations/capabilities/`.
 

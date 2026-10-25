@@ -8,6 +8,8 @@ añadirlo a Gladys.
 Ninguna cuenta que crear, ninguna clave de API que pegar: las dos fuentes son
 datos abiertos públicos.
 
+> Requiere **Gladys 5.3.0** o posterior.
+
 ## Añadir sus viviendas de Gladys, con un clic
 
 Ya le ha dicho a Gladys dónde vive: es el mapa de **Configuración > Viviendas**.

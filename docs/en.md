@@ -6,6 +6,8 @@ and a device shows up in the **Discover** tab, ready to be added to Gladys.
 
 No account to create, no API key to paste: both sources are public open data.
 
+> Requires **Gladys 5.3.0** or later.
+
 ## Adding your Gladys houses, in one click
 
 You have already told Gladys where you live: that is the map in **Settings >

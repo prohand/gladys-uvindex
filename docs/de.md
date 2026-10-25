@@ -8,6 +8,8 @@ bereit, zu Gladys hinzugefügt zu werden.
 Kein Konto zu erstellen, kein API-Schlüssel einzufügen: Beide Quellen sind
 öffentliche Open Data.
 
+> Erfordert **Gladys 5.3.0** oder neuer.
+
 ## Deine Gladys-Zuhause mit einem Klick hinzufügen
 
 Du hast Gladys bereits gesagt, wo du wohnst: Das ist die Karte unter
